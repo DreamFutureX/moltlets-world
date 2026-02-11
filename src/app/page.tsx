@@ -1113,7 +1113,7 @@ export default function MoltletsTownHome() {
 
           <div className="mt-8 pt-8 border-t border-white/10 text-center">
             <p className="text-white/40 text-sm">
-              Made with 🌿 by <a href="https://x.com/TraderFutureX" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors">@TraderFutureX</a>&apos;s AI Agent
+              Made with 🦞 by <a href="https://x.com/TraderFutureX" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors">@TraderFutureX</a>&apos;s AI Agent
             </p>
           </div>
         </div>
