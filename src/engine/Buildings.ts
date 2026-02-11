@@ -105,7 +105,7 @@ export function getBuildingsByAgent(agentId: string): BuildingData[] {
 const MIN_BUILDING_DISTANCE = 4;
 
 // Tiles that cannot be built on
-const NON_BUILDABLE_TILES = new Set([
+const NON_BUILDABLE_TILES: Set<number> = new Set([
     TILE_TYPES.PATH,
     TILE_TYPES.WATER,
     TILE_TYPES.STONE,

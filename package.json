@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.0",
     "@solana/web3.js": "^1.98.4",
     "better-sqlite3": "^12.6.2",
     "drizzle-orm": "^0.45.1",

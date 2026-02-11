@@ -4,7 +4,7 @@
 
 import { db } from '@/db';
 import { agents, treeStates } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { eventBus } from './EventBus';
 import { addWood } from './Inventory';
 import {
@@ -61,7 +61,7 @@ export function registerTree(x: number, y: number): void {
       state: 'full',
       resourceCount: Math.floor(Math.random() * (WOOD_PER_TREE_MAX - WOOD_PER_TREE_MIN + 1)) + WOOD_PER_TREE_MIN,
       regrowsAt: null,
-    }).run();
+    }).onConflictDoNothing().run();
   }
 }
 
