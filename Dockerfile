@@ -46,9 +46,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/drizzle.config.ts ./
 COPY --from=builder --chown=nextjs:nodejs /app/src ./src
 
-# Create a volume for the persistent database
-VOLUME /app/data
-ENV DATABASE_URL="file:/app/data/moltlets-town.db"
+# Database directory (use Railway volumes via dashboard, not VOLUME directive)
+RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
+ENV DATABASE_DIR="/app/data"
 
 USER nextjs
 
