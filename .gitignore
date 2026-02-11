@@ -39,3 +39,24 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# database files (local SQLite)
+*.db
+*.db-shm
+*.db-wal
+
+# test scripts
+test-*.mjs
+spawn-*.mjs
+spawn-*.ts
+verify-*.mjs
+bloop-builds-house.mjs
+
+# local backups
+*.backup.tsx
+
+# agent files
+.agent/
+
+# large media files (use LFS or CDN in production)
+# public/hero-video.mp4
