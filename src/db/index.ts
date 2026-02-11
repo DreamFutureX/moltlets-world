@@ -1,6 +1,6 @@
 // ============================================================
-// Moltlets Town - Database Connection (Singleton)
-// Optimized for high-load (500+ agents)
+// Moltlets World - Database Connection (SQLite)
+// Uses better-sqlite3 for synchronous operations
 // ============================================================
 
 import Database from 'better-sqlite3';
@@ -8,7 +8,9 @@ import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from './schema';
 import path from 'path';
 
-const DB_PATH = path.join(process.cwd(), 'moltlets-town.db');
+// Use /data for Railway volume mount, fallback to local for dev
+const DB_DIR = process.env.DATABASE_DIR || process.cwd();
+const DB_PATH = path.join(DB_DIR, 'moltlets-world.db');
 
 // Singleton pattern for Next.js hot reload
 const globalForDb = globalThis as unknown as {
@@ -19,37 +21,23 @@ const globalForDb = globalThis as unknown as {
 function createDb() {
   if (globalForDb.__db) return globalForDb.__db;
 
+  console.log(`[DB] Connecting to: ${DB_PATH}`);
   const sqlite = new Database(DB_PATH);
 
   // ═══════════════════════════════════════════════════════════
-  // PERFORMANCE OPTIMIZATIONS FOR HIGH LOAD
+  // PERFORMANCE OPTIMIZATIONS
   // ═══════════════════════════════════════════════════════════
 
-  // WAL mode for better concurrent reads/writes
   sqlite.pragma('journal_mode = WAL');
-
-  // Synchronous = NORMAL for better performance (still safe with WAL)
   sqlite.pragma('synchronous = NORMAL');
-
-  // Increase cache size (default is 2MB, set to 64MB)
   sqlite.pragma('cache_size = -64000');
-
-  // Memory-mapped I/O for faster reads (256MB)
   sqlite.pragma('mmap_size = 268435456');
-
-  // Temp store in memory
   sqlite.pragma('temp_store = MEMORY');
-
-  // Busy timeout - wait up to 30 seconds for locks
   sqlite.pragma('busy_timeout = 30000');
-
-  // Foreign keys
   sqlite.pragma('foreign_keys = ON');
-
-  // WAL checkpoint settings
   sqlite.pragma('wal_autocheckpoint = 1000');
 
-  // Create tables - wrapped in try/catch for safety
+  // Create tables
   try {
     sqlite.exec(`
       CREATE TABLE IF NOT EXISTS agents (
@@ -71,6 +59,7 @@ function createDb() {
         inventory TEXT NOT NULL DEFAULT '{}',
         mood TEXT NOT NULL DEFAULT 'neutral',
         direction TEXT NOT NULL DEFAULT 'se',
+        wallet_address TEXT,
         last_active_at INTEGER NOT NULL,
         created_at INTEGER NOT NULL
       );
@@ -143,20 +132,24 @@ function createDb() {
         created_at INTEGER NOT NULL,
         completed_at INTEGER
       );
+
+      CREATE TABLE IF NOT EXISTS agent_claims (
+        id TEXT PRIMARY KEY,
+        agent_id TEXT,
+        agent_name TEXT NOT NULL,
+        twitter_handle TEXT,
+        tweet_url TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at INTEGER NOT NULL,
+        verified_at INTEGER
+      );
     `);
 
-    // Add inventory column if it doesn't exist (migration for existing DBs)
-    try {
-      sqlite.exec(`ALTER TABLE agents ADD COLUMN inventory TEXT NOT NULL DEFAULT '{}'`);
-    } catch {
-      // Column already exists, ignore
-    }
+    // Add columns for existing DBs (migrations)
+    try { sqlite.exec(`ALTER TABLE agents ADD COLUMN inventory TEXT NOT NULL DEFAULT '{}'`); } catch { /* exists */ }
+    try { sqlite.exec(`ALTER TABLE agents ADD COLUMN wallet_address TEXT`); } catch { /* exists */ }
 
-    // ═══════════════════════════════════════════════════════════
-    // INDEXES FOR FAST QUERIES (high-load optimization)
-    // ═══════════════════════════════════════════════════════════
-
-    // Create indexes (safely - ignore if exists)
+    // Create indexes
     const indexes = [
       `CREATE INDEX IF NOT EXISTS idx_agents_state ON agents(state)`,
       `CREATE INDEX IF NOT EXISTS idx_agents_last_active ON agents(last_active_at)`,
@@ -168,12 +161,14 @@ function createDb() {
       `CREATE INDEX IF NOT EXISTS idx_events_created ON events(created_at)`,
       `CREATE INDEX IF NOT EXISTS idx_buildings_owner ON buildings(owner_agent_id)`,
       `CREATE INDEX IF NOT EXISTS idx_tree_states_coords ON tree_states(x, y)`,
+      `CREATE INDEX IF NOT EXISTS idx_agent_claims_status ON agent_claims(status)`,
     ];
 
     for (const idx of indexes) {
       try { sqlite.exec(idx); } catch { /* ignore */ }
     }
 
+    console.log('[DB] Schema initialized successfully');
   } catch (err) {
     console.error('[DB] Error creating tables:', err);
   }
@@ -188,12 +183,9 @@ export const sqlite = globalForDb.__sqlite!;
 export type DbType = typeof db;
 
 // ═══════════════════════════════════════════════════════════
-// SAFE DATABASE OPERATIONS (prevent crashes)
+// SAFE DATABASE OPERATIONS
 // ═══════════════════════════════════════════════════════════
 
-/**
- * Execute a database operation safely with error handling and retry
- */
 export function safeDbOperation<T>(operation: () => T, fallback: T, retries = 2): T {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
@@ -201,29 +193,21 @@ export function safeDbOperation<T>(operation: () => T, fallback: T, retries = 2)
     } catch (err) {
       console.error(`[DB] Operation failed (attempt ${attempt + 1}/${retries + 1}):`, err);
       if (attempt === retries) {
-        console.error('[DB] All retries exhausted, returning fallback');
         return fallback;
       }
-      // Brief delay before retry
       const delay = Math.min(100 * Math.pow(2, attempt), 1000);
       const start = Date.now();
-      while (Date.now() - start < delay) { /* busy wait for sync context */ }
+      while (Date.now() - start < delay) { /* busy wait */ }
     }
   }
   return fallback;
 }
 
-/**
- * Batch multiple updates into a single transaction
- */
 export function batchUpdate(operations: (() => void)[]): boolean {
   if (operations.length === 0) return true;
-
   try {
     const transaction = sqlite.transaction(() => {
-      for (const op of operations) {
-        op();
-      }
+      for (const op of operations) op();
     });
     transaction();
     return true;
@@ -233,20 +217,10 @@ export function batchUpdate(operations: (() => void)[]): boolean {
   }
 }
 
-/**
- * Run WAL checkpoint to prevent unbounded WAL growth
- */
 export function runCheckpoint(): void {
-  try {
-    sqlite.pragma('wal_checkpoint(PASSIVE)');
-  } catch (err) {
-    console.error('[DB] Checkpoint failed:', err);
-  }
+  try { sqlite.pragma('wal_checkpoint(PASSIVE)'); } catch { /* ignore */ }
 }
 
-/**
- * Clean up old events to prevent database bloat
- */
 export function cleanupOldEvents(maxAgeMs: number = 24 * 60 * 60 * 1000): number {
   try {
     const cutoff = Date.now() - maxAgeMs;
