@@ -122,7 +122,11 @@ export const CRAFTING_RECIPES = [
 ] as const;
 
 // --- World Time ---
-export const GAME_TIME_SCALE = 60;           // 1 real second = 60 game seconds (1 minute)
+// Time scale: 1 game year = ~1 real month (1/12 of real time)
+// 1 game day = 1440 game minutes = 2.14 real hours (7714 real seconds)
+// 1 game month (28 days) = ~2.5 real days
+// 1 game year (336 days) = ~30 real days
+export const GAME_TIME_SCALE = 0.1867;       // 1 real second = 0.1867 game seconds (1440 / 7714)
 export const DAYS_PER_MONTH = 28;
 export const MONTHS_PER_YEAR = 12;
 export const MONTH_NAMES = ['Spring 1', 'Spring 2', 'Spring 3', 'Summer 1', 'Summer 2', 'Summer 3', 'Fall 1', 'Fall 2', 'Fall 3', 'Winter 1', 'Winter 2', 'Winter 3'] as const;
