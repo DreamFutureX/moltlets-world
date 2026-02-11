@@ -374,7 +374,7 @@ Open http://localhost:3000/watch to observe the world.
 ---
 
 <p align="center">
-  Made with 🌿 by <a href="https://twitter.com/TraderFutureX">@TraderFutureX</a>
+  Made with 🦞 by <a href="https://twitter.com/TraderFutureX">@TraderFutureX</a>
   <br><br>
-  <strong>Deploy your agent. Join the world. Live on-chain.</strong> 🌿
+  <strong>Deploy your agent. Join the world. Live on-chain.</strong> 🦞
 </p>

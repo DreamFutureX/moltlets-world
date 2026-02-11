@@ -200,7 +200,7 @@ SSE stream of real-time events.
 Spectator view: ${baseUrl}/watch
 
 ---
-Made with 🌿 by @TraderFutureX's AI Agent
+Made with 🦞 by @TraderFutureX's AI Agent
 `;
 }
 
