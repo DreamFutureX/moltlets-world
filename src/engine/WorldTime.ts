@@ -32,7 +32,6 @@ let currentMonth = 1;
 let currentYear = 1;
 let currentWeather: WeatherType = 'sunny';
 let weatherChangesAt = 0;
-let lastDayCheckTime = Date.now();
 let gameStartedAt = Date.now();
 
 // Reference to world map for tree spawning
@@ -91,7 +90,6 @@ export function initWorldTime(): void {
         weatherChangesAt = now + randomWeatherDuration();
     }
 
-    lastDayCheckTime = Date.now();
 }
 
 // Get current season from month
@@ -170,59 +168,50 @@ export function tickWeather(): void {
 // Update time (called from tick)
 export function tickTime(): void {
     const now = Date.now();
-    const elapsed = now - lastDayCheckTime;
 
+    // Calculate total days elapsed since game started
     // 1 real minute = 1 game day (with GAME_TIME_SCALE = 60)
-    // So every 60 real seconds, advance a day
     const gameSecondsPerRealSecond = GAME_TIME_SCALE;
     const gameSecondsPerDay = 24 * 60; // 1440 game seconds per day
-    const realSecondsPerDay = gameSecondsPerDay / gameSecondsPerRealSecond; // 24 real seconds = 1 game day
+    const realMsPerDay = (gameSecondsPerDay / gameSecondsPerRealSecond) * 1000; // 24000ms = 24 real seconds = 1 game day
 
-    const realSecondsElapsed = elapsed / 1000;
-    const daysToAdd = Math.floor(realSecondsElapsed / realSecondsPerDay);
+    const totalElapsed = now - gameStartedAt;
+    const totalDays = Math.floor(totalElapsed / realMsPerDay);
 
-    if (daysToAdd > 0) {
-        lastDayCheckTime = now;
+    // Calculate what year/month/day we should be at
+    const targetYear = Math.floor(totalDays / (DAYS_PER_MONTH * MONTHS_PER_YEAR)) + 1;
+    const daysIntoYear = totalDays % (DAYS_PER_MONTH * MONTHS_PER_YEAR);
+    const targetMonth = Math.floor(daysIntoYear / DAYS_PER_MONTH) + 1;
+    const targetDay = (daysIntoYear % DAYS_PER_MONTH) + 1;
 
-        for (let i = 0; i < daysToAdd; i++) {
-            advanceDay();
-        }
+    // Only update if changed
+    if (targetDay !== currentDay || targetMonth !== currentMonth || targetYear !== currentYear) {
+        currentDay = targetDay;
+        currentMonth = targetMonth;
+        currentYear = targetYear;
+
+        // Save to DB
+        db.update(worldMeta)
+            .set({
+                currentDay,
+                currentMonth,
+                currentYear,
+            })
+            .where(eq(worldMeta.id, 'main'))
+            .run();
+
+        // Emit event
+        eventBus.emit('time_change', {
+            day: currentDay,
+            month: currentMonth,
+            year: currentYear,
+            season: getSeason(),
+        });
+
+        console.log(`[WorldTime] Time updated: Year ${currentYear}, Month ${currentMonth}, Day ${currentDay}`);
     }
 }
 
-function advanceDay(): void {
-    currentDay++;
-
-    if (currentDay > DAYS_PER_MONTH) {
-        currentDay = 1;
-        currentMonth++;
-
-        if (currentMonth > MONTHS_PER_YEAR) {
-            currentMonth = 1;
-            currentYear++;
-        }
-    }
-
-    // Save to DB
-    db.update(worldMeta)
-        .set({
-            currentDay,
-            currentMonth,
-            currentYear,
-        })
-        .where(eq(worldMeta.id, 'main'))
-        .run();
-
-    // Emit event
-    eventBus.emit('time_change', {
-        day: currentDay,
-        month: currentMonth,
-        year: currentYear,
-        season: getSeason(),
-    });
-
-    console.log(`[WorldTime] Day advanced: Year ${currentYear}, Month ${currentMonth}, Day ${currentDay}`);
-}
 
 // Tree auto-generation (called from game loop)
 export function tickTreeSpawning(): void {
