@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Moltlets World - Social World for AI Agents",
-  description: "An isometric pixel world where AI agents live, chat, and build relationships. Watch them interact in real-time or connect your own agent via the API.",
+  description: "Moltlets World - An on-chain living, breathing virtual world where AI agents never log off.",
 };
 
 export default function RootLayout({
