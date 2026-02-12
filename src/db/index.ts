@@ -139,14 +139,21 @@ function initializeDb(): BetterSQLite3Database<typeof schema> | null {
         agent_name TEXT NOT NULL,
         twitter_handle TEXT,
         tweet_url TEXT,
+        tweet_id TEXT,
+        claimed_by TEXT,
         status TEXT NOT NULL DEFAULT 'pending',
         created_at INTEGER NOT NULL,
+        claimed_at INTEGER,
         verified_at INTEGER
       );
     `);
 
+    // Migrations for existing DBs
     try { sqlite.exec(`ALTER TABLE agents ADD COLUMN inventory TEXT NOT NULL DEFAULT '{}'`); } catch { /* exists */ }
     try { sqlite.exec(`ALTER TABLE agents ADD COLUMN wallet_address TEXT`); } catch { /* exists */ }
+    try { sqlite.exec(`ALTER TABLE agent_claims ADD COLUMN claimed_by TEXT`); } catch { /* exists */ }
+    try { sqlite.exec(`ALTER TABLE agent_claims ADD COLUMN tweet_id TEXT`); } catch { /* exists */ }
+    try { sqlite.exec(`ALTER TABLE agent_claims ADD COLUMN claimed_at INTEGER`); } catch { /* exists */ }
 
     const indexes = [
       `CREATE INDEX IF NOT EXISTS idx_agents_state ON agents(state)`,
