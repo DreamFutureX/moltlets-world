@@ -1,6 +1,7 @@
 // ============================================================
 // Moltlets World - Database Connection (SQLite)
 // Uses better-sqlite3 for synchronous operations
+// LAZY INITIALIZATION - only connects at runtime, not build time
 // ============================================================
 
 import Database from 'better-sqlite3';
@@ -16,10 +17,19 @@ const DB_PATH = path.join(DB_DIR, 'moltlets-world.db');
 const globalForDb = globalThis as unknown as {
   __db?: ReturnType<typeof drizzle>;
   __sqlite?: Database.Database;
+  __initialized?: boolean;
 };
 
-function createDb() {
-  if (globalForDb.__db) return globalForDb.__db;
+function initializeDb() {
+  // Skip during build time
+  if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
+    console.log('[DB] Skipping initialization during build');
+    return null;
+  }
+
+  if (globalForDb.__db && globalForDb.__initialized) {
+    return globalForDb.__db;
+  }
 
   console.log(`[DB] Connecting to: ${DB_PATH}`);
   const sqlite = new Database(DB_PATH);
@@ -175,12 +185,49 @@ function createDb() {
 
   globalForDb.__sqlite = sqlite;
   globalForDb.__db = drizzle(sqlite, { schema });
+  globalForDb.__initialized = true;
   return globalForDb.__db;
 }
 
-export const db = createDb();
-export const sqlite = globalForDb.__sqlite!;
-export type DbType = typeof db;
+// Lazy getter - only initializes on first access
+function getDb() {
+  if (!globalForDb.__initialized) {
+    initializeDb();
+  }
+  return globalForDb.__db!;
+}
+
+function getSqlite() {
+  if (!globalForDb.__initialized) {
+    initializeDb();
+  }
+  return globalForDb.__sqlite!;
+}
+
+// Export as getters to ensure lazy initialization
+export const db = new Proxy({} as ReturnType<typeof drizzle>, {
+  get(_, prop) {
+    const realDb = getDb();
+    if (!realDb) {
+      throw new Error('Database not initialized - this should not happen at runtime');
+    }
+    const value = (realDb as Record<string | symbol, unknown>)[prop];
+    return typeof value === 'function' ? value.bind(realDb) : value;
+  }
+});
+
+export const sqlite = new Proxy({} as Database.Database, {
+  get(_, prop) {
+    const realSqlite = getSqlite();
+    if (!realSqlite) {
+      throw new Error('SQLite not initialized - this should not happen at runtime');
+    }
+    const value = (realSqlite as Record<string | symbol, unknown>)[prop];
+    return typeof value === 'function' ? value.bind(realSqlite) : value;
+  }
+});
+
+export type DbType = ReturnType<typeof drizzle>;
 
 // ═══════════════════════════════════════════════════════════
 // SAFE DATABASE OPERATIONS
@@ -205,8 +252,10 @@ export function safeDbOperation<T>(operation: () => T, fallback: T, retries = 2)
 
 export function batchUpdate(operations: (() => void)[]): boolean {
   if (operations.length === 0) return true;
+  const realSqlite = getSqlite();
+  if (!realSqlite) return false;
   try {
-    const transaction = sqlite.transaction(() => {
+    const transaction = realSqlite.transaction(() => {
       for (const op of operations) op();
     });
     transaction();
@@ -218,13 +267,17 @@ export function batchUpdate(operations: (() => void)[]): boolean {
 }
 
 export function runCheckpoint(): void {
-  try { sqlite.pragma('wal_checkpoint(PASSIVE)'); } catch { /* ignore */ }
+  const realSqlite = getSqlite();
+  if (!realSqlite) return;
+  try { realSqlite.pragma('wal_checkpoint(PASSIVE)'); } catch { /* ignore */ }
 }
 
 export function cleanupOldEvents(maxAgeMs: number = 24 * 60 * 60 * 1000): number {
+  const realSqlite = getSqlite();
+  if (!realSqlite) return 0;
   try {
     const cutoff = Date.now() - maxAgeMs;
-    const result = sqlite.prepare('DELETE FROM events WHERE created_at < ?').run(cutoff);
+    const result = realSqlite.prepare('DELETE FROM events WHERE created_at < ?').run(cutoff);
     return result.changes;
   } catch (err) {
     console.error('[DB] Event cleanup failed:', err);
