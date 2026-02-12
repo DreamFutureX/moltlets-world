@@ -3656,10 +3656,116 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
     onZoomChange?.(newZoom);
   }, [onZoomChange]);
 
+  // Touch event handlers for mobile
+  const touchRef = useRef<{ startX: number; startY: number; lastX: number; lastY: number; pinchDist: number } | null>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    cameraRef.current.animating = false;
+    cameraRef.current.trackingAgentId = null;
+
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      touchRef.current = {
+        startX: touch.clientX,
+        startY: touch.clientY,
+        lastX: touch.clientX,
+        lastY: touch.clientY,
+        pinchDist: 0,
+      };
+      dragRef.current = {
+        dragging: true,
+        startX: touch.clientX,
+        startY: touch.clientY,
+        camStartX: cameraRef.current.x,
+        camStartY: cameraRef.current.y,
+      };
+    } else if (e.touches.length === 2) {
+      // Pinch zoom start
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      touchRef.current = {
+        startX: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+        startY: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+        lastX: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+        lastY: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+        pinchDist: Math.sqrt(dx * dx + dy * dy),
+      };
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    if (!touchRef.current) return;
+
+    if (e.touches.length === 1 && dragRef.current.dragging) {
+      const touch = e.touches[0];
+      const nx = dragRef.current.camStartX + (touch.clientX - dragRef.current.startX);
+      const ny = dragRef.current.camStartY + (touch.clientY - dragRef.current.startY);
+      cameraRef.current.x = nx;
+      cameraRef.current.y = ny;
+      cameraRef.current.targetX = nx;
+      cameraRef.current.targetY = ny;
+      touchRef.current.lastX = touch.clientX;
+      touchRef.current.lastY = touch.clientY;
+    } else if (e.touches.length === 2 && touchRef.current.pinchDist > 0) {
+      // Pinch zoom
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const newDist = Math.sqrt(dx * dx + dy * dy);
+      const scale = newDist / touchRef.current.pinchDist;
+
+      const cam = cameraRef.current;
+      const oldZoom = cam.zoom;
+      const newZoom = Math.max(0.3, Math.min(3, oldZoom * scale));
+      cam.zoom = newZoom;
+      onZoomChange?.(newZoom);
+
+      touchRef.current.pinchDist = newDist;
+    }
+  }, [onZoomChange]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchRef.current) return;
+
+    // Check if it was a tap (minimal movement)
+    const dd = Math.abs(touchRef.current.lastX - touchRef.current.startX) +
+               Math.abs(touchRef.current.lastY - touchRef.current.startY);
+
+    if (dd < 10 && e.changedTouches.length === 1) {
+      // Check if tapped on an agent
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const touch = e.changedTouches[0];
+        const rect = canvas.getBoundingClientRect();
+        const cam = cameraRef.current;
+        const wmx = (touch.clientX - rect.left - rect.width / 2 - cam.x) / cam.zoom;
+        const wmy = (touch.clientY - rect.top - 80 - cam.y) / cam.zoom;
+
+        for (const agent of agentsRef.current) {
+          const rs = renderStatesRef.current.get(agent.id);
+          const ax = rs ? rs.displayX : agent.posX;
+          const ay = rs ? rs.displayY : agent.posY;
+          const adx = wmx - (ax - ay) * TILE_HALF_W;
+          const ady = wmy - (ax + ay) * TILE_HALF_H + 10;
+          if (adx * adx + ady * ady < 400) { // Slightly larger hit area for touch
+            cameraRef.current.trackingAgentId = agent.id;
+            onAgentClick?.(agent.id);
+            break;
+          }
+        }
+      }
+    }
+
+    dragRef.current.dragging = false;
+    touchRef.current = null;
+  }, [onAgentClick]);
+
   return (
-    <canvas ref={canvasRef} className="w-full h-full block" style={{ imageRendering: 'pixelated' }}
+    <canvas ref={canvasRef} className="w-full h-full block touch-none" style={{ imageRendering: 'pixelated' }}
       onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}
       onMouseLeave={() => { dragRef.current.dragging = false; }} onWheel={handleWheel}
+      onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}
     />
   );
 }
