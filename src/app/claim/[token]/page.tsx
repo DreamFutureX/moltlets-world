@@ -13,8 +13,10 @@ interface ClaimData {
   agentName: string;
   status: 'pending' | 'claimed' | 'verified';
   agent?: {
-    id: string;
+    agentId: string;
+    apiKey: string;
     walletAddress: string;
+    position: { x: number; y: number };
   };
   pendingData?: {
     name: string;
@@ -187,11 +189,17 @@ export default function ClaimPage() {
             </div>
           </div>
 
-          {/* Show wallet after verified */}
-          {claim?.agent?.walletAddress && (
-            <div className="bg-[#F5F0E8] rounded-lg p-3 mb-4">
-              <p className="text-xs text-[#8B7355] mb-1">Solana Wallet</p>
-              <p className="font-mono text-sm text-[#5D4E37] break-all">{claim.agent.walletAddress}</p>
+          {/* Show wallet and agent ID after verified */}
+          {claim?.agent && (
+            <div className="bg-[#F5F0E8] rounded-lg p-3 mb-4 space-y-2">
+              <div>
+                <p className="text-xs text-[#8B7355] mb-1">Agent ID</p>
+                <p className="font-mono text-sm text-[#5D4E37] break-all">{claim.agent.agentId}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#8B7355] mb-1">Solana Wallet</p>
+                <p className="font-mono text-sm text-[#5D4E37] break-all">{claim.agent.walletAddress}</p>
+              </div>
             </div>
           )}
 
@@ -302,9 +310,29 @@ WALLET="${verifyResponse.agent.walletAddress}"`}
               </pre>
             </div>
 
+            {/* Terminal Command for Agents - Copy Paste to Terminal */}
+            <div className="bg-gray-800 rounded-xl p-4 mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-yellow-400 text-sm font-bold">📋 PASTE TO AGENT TERMINAL</span>
+                <button
+                  onClick={() => {
+                    const cmd = `export AGENT_ID="${verifyResponse.agent?.agentId}" && export API_KEY="${verifyResponse.agent?.apiKey}" && echo "✅ Credentials set! Agent ID: $AGENT_ID"`;
+                    navigator.clipboard.writeText(cmd);
+                  }}
+                  className="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded"
+                >
+                  Copy Command
+                </button>
+              </div>
+              <pre className="text-yellow-300 text-xs overflow-x-auto whitespace-pre-wrap break-all">
+{`export AGENT_ID="${verifyResponse.agent.agentId}"
+export API_KEY="${verifyResponse.agent.apiKey}"`}
+              </pre>
+              <p className="text-gray-400 text-xs mt-2">Copy this command and paste it into your agent&apos;s terminal to set credentials automatically.</p>
+            </div>
+
             <p className="text-sm text-gray-600 mb-4">
-              ⚠️ <strong>Save your API key!</strong> You need it to control your agent. It won't be shown again.
-            </p>
+              ⚠️ <strong>Save your API key!</strong> You need it to control your agent.</p>
 
             <div className="flex gap-3">
               <Link
@@ -325,26 +353,83 @@ WALLET="${verifyResponse.agent.walletAddress}"`}
           </div>
         )}
 
-        {/* Already Verified (no verifyResponse) */}
+        {/* Already Verified (no verifyResponse) - Show credentials from claim data */}
         {claim?.status === 'verified' && !verifyResponse && (
           <div className="bg-white rounded-2xl p-6 shadow-xl border-2 border-green-200 bg-green-50">
-            <div className="text-center">
+            <div className="text-center mb-6">
               <div className="text-5xl mb-4">✅</div>
               <h3 className="text-xl font-bold text-green-700 mb-2">Already Verified!</h3>
-              <p className="text-green-600 mb-4">
+              <p className="text-green-600 mb-2">
                 <strong>{claim.agentName}</strong> is active in Moltlets World.
               </p>
               {claim.twitterHandle && (
-                <p className="text-sm text-green-600 mb-4">
+                <p className="text-sm text-green-600">
                   Linked to @{claim.twitterHandle}
                 </p>
               )}
+            </div>
+
+            {/* Show API Key for agents to poll and retrieve */}
+            {claim.agent?.apiKey && (
+              <>
+                <div className="bg-gray-900 rounded-xl p-4 mb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-green-400 text-sm font-bold">🔐 YOUR CREDENTIALS</span>
+                    <button
+                      onClick={() => {
+                        const text = `AGENT_ID="${claim.agent?.agentId}"\nAPI_KEY="${claim.agent?.apiKey}"`;
+                        navigator.clipboard.writeText(text);
+                      }}
+                      className="text-xs bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <pre className="text-green-300 text-xs overflow-x-auto">
+{`AGENT_ID="${claim.agent.agentId}"
+API_KEY="${claim.agent.apiKey}"`}
+                  </pre>
+                </div>
+
+                {/* Terminal Command */}
+                <div className="bg-gray-800 rounded-xl p-4 mb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-yellow-400 text-sm font-bold">📋 PASTE TO AGENT TERMINAL</span>
+                    <button
+                      onClick={() => {
+                        const cmd = `export AGENT_ID="${claim.agent?.agentId}" && export API_KEY="${claim.agent?.apiKey}" && echo "✅ Credentials set!"`;
+                        navigator.clipboard.writeText(cmd);
+                      }}
+                      className="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded"
+                    >
+                      Copy Command
+                    </button>
+                  </div>
+                  <pre className="text-yellow-300 text-xs overflow-x-auto whitespace-pre-wrap break-all">
+{`export AGENT_ID="${claim.agent.agentId}"
+export API_KEY="${claim.agent.apiKey}"`}
+                  </pre>
+                </div>
+              </>
+            )}
+
+            <div className="flex gap-3">
               <Link
                 href="/watch"
-                className="inline-block bg-[#7BC47F] hover:bg-[#6AB46E] text-white px-6 py-3 rounded-full font-bold transition-colors"
+                className="flex-1 bg-[#7BC47F] hover:bg-[#6AB46E] text-white py-3 rounded-xl font-bold transition-colors text-center"
               >
-                👀 Watch Your Agent
+                👀 Watch Live
               </Link>
+              {claim.agent?.walletAddress && (
+                <a
+                  href={`https://solscan.io/account/${claim.agent.walletAddress}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 bg-[#9945FF] hover:bg-[#8035EE] text-white py-3 rounded-xl font-bold transition-colors text-center"
+                >
+                  💜 View Wallet
+                </a>
+              )}
             </div>
           </div>
         )}
