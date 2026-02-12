@@ -423,12 +423,12 @@ function FeatureItem({ icon, title, description, color, details, scene, image }:
   return (
     <div className="group relative bg-white rounded-[2rem] overflow-hidden shadow-lg border-3 border-[#E8DFD0] hover:border-[#7BC47F] transition-all duration-500 hover:shadow-xl hover:-translate-y-1">
       {/* Scene illustration */}
-      <div className={`${image ? 'bg-[#F5F0E8]' : color} h-48 relative overflow-hidden`}>
+      <div className={`${image ? '' : color} ${image ? 'aspect-[4/3]' : 'h-40'} relative overflow-hidden rounded-t-[2rem]`}>
         {image ? (
           <img
             src={image}
             alt={title}
-            className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : scene ? (
           <div className="absolute inset-0 p-2">
