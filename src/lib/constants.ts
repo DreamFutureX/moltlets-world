@@ -10,13 +10,13 @@ export const TILE_HALF_W = 32;
 export const TILE_HALF_H = 16;
 
 // --- Game Loop ---
-export const TICK_RATE_MS = 400;       // ~2.5 Hz - slower for smoother movement
+export const TICK_RATE_MS = 200;       // 5 Hz - frequent small updates for smooth sliding
 export const STEP_RATE_MS = 1000;      // 1 Hz - DB persistence
 export const WANDER_INTERVAL_MS = 6000; // how often idle agents pick a new spot
 
 // --- Movement ---
-export const AGENT_SPEED = 0.25;       // tiles per tick (slower = more natural)
-export const MOVE_LERP_SPEED = 0.04;   // client-side interpolation factor (lower = smoother glide)
+export const AGENT_SPEED = 0.25;       // tiles per tick (0.25 tile every 200ms ≈ 1.25 tiles/sec)
+export const MOVE_LERP_SPEED = 0.12;   // client-side interpolation factor (smooth glide between server ticks)
 
 // --- Conversations ---
 export const CONVERSATION_DISTANCE = 3;     // max tiles apart to start talking

@@ -695,8 +695,9 @@ class World {
       const currentPos: Position = { x: Math.round(agent.posX), y: Math.round(agent.posY) };
       const targetPos: Position = { x: agent.targetX, y: agent.targetY };
 
-      // Already at target
-      if (currentPos.x === targetPos.x && currentPos.y === targetPos.y) {
+      // Already at target (snap when very close)
+      const distToTarget = Math.abs(agent.posX - targetPos.x) + Math.abs(agent.posY - targetPos.y);
+      if (distToTarget < 0.1) {
         db.update(agents).set({
           state: 'idle',
           targetX: null,
@@ -714,7 +715,7 @@ class World {
         continue;
       }
 
-      // Find path
+      // Find path from current rounded position
       const otherPositions = agentPositions.filter(
         p => !(p.x === currentPos.x && p.y === currentPos.y)
       );
@@ -736,20 +737,35 @@ class World {
         continue;
       }
 
-      // Move to next step
+      // Move fractionally toward the next tile
       const nextStep = path[0];
+      const dx = nextStep.x - agent.posX;
+      const dy = nextStep.y - agent.posY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      let newX: number, newY: number;
+      if (dist <= AGENT_SPEED) {
+        // Close enough to snap to the next tile
+        newX = nextStep.x;
+        newY = nextStep.y;
+      } else {
+        // Move a fraction toward next tile
+        newX = agent.posX + (dx / dist) * AGENT_SPEED;
+        newY = agent.posY + (dy / dist) * AGENT_SPEED;
+      }
+
       const direction = getDirection(currentPos, nextStep);
 
       db.update(agents).set({
-        posX: nextStep.x,
-        posY: nextStep.y,
+        posX: newX,
+        posY: newY,
         direction,
       }).where(eq(agents.id, agent.id)).run();
 
       eventBus.emit('agent_move', {
         agentId: agent.id,
         name: agent.name,
-        position: nextStep,
+        position: { x: newX, y: newY },
         direction,
         state: 'walking',
         target: targetPos,
