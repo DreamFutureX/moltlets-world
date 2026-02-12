@@ -3053,7 +3053,7 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
     for (const agent of sorted) {
       const rs = renderStatesRef.current.get(agent.id)!;
       const sc = gridToScreen(rs.displayX, rs.displayY);
-      const bounce = agent.state === 'walking' ? Math.abs(Math.sin(now / 250)) * 2.5 : 0;
+      const bounce = 0;
       drawAgent(ctx, agent, sc.x, sc.y - bounce, hoveredAgentRef.current === agent.id, selectedAgentId === agent.id);
 
       // O(1) lookups for speech bubbles and emotes
