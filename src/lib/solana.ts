@@ -94,11 +94,11 @@ interface ActivityLog {
   timestamp: number;
 }
 
-// Batch queue for activities
+// Batch queue for activities - optimized to save gas
 const activityQueue: ActivityLog[] = [];
 let batchTimer: NodeJS.Timeout | null = null;
-const BATCH_INTERVAL = 60000; // 1 minute
-const BATCH_SIZE = 10; // Max activities per transaction
+const BATCH_INTERVAL = 5 * 60 * 1000; // 5 minutes - batch more to save gas
+const BATCH_SIZE = 50; // 50 activities per transaction - fewer txs = less gas
 
 // Treasury keypair for paying transaction fees (fund this on devnet)
 let treasuryKeypair: Keypair | null = null;
@@ -176,15 +176,27 @@ async function flushActivityBatch(): Promise<void> {
   // Take up to BATCH_SIZE activities
   const batch = activityQueue.splice(0, BATCH_SIZE);
 
-  // Format as compact memo
-  const memoLines = batch.map(a => {
-    const parts = [`MOLTLETS:${a.type}:${a.agentName}`];
-    if (a.details) parts.push(a.details);
-    if (a.value !== undefined) parts.push(`+${a.value}`);
-    return parts.join(':');
-  });
+  // Format as VERY compact memo to save space (max ~1000 bytes for memo)
+  // Group by activity type for compression
+  const summary: Record<string, { count: number; agents: Set<string>; totalValue: number }> = {};
 
-  const memoText = memoLines.join('\n');
+  for (const a of batch) {
+    if (!summary[a.type]) {
+      summary[a.type] = { count: 0, agents: new Set(), totalValue: 0 };
+    }
+    summary[a.type].count++;
+    summary[a.type].agents.add(a.agentName);
+    if (a.value) summary[a.type].totalValue += a.value;
+  }
+
+  // Create compact summary: "MW|join:3|fish:12+45|chop:8+24|chat:15"
+  const parts = ['MW']; // Moltlets World prefix
+  for (const [type, data] of Object.entries(summary)) {
+    let part = `${type}:${data.count}`;
+    if (data.totalValue > 0) part += `+${data.totalValue}`;
+    parts.push(part);
+  }
+  const memoText = parts.join('|');
 
   try {
     const conn = getConnection();
