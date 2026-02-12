@@ -147,15 +147,17 @@ export default function WatchPage() {
           </div>
         </div>
 
-        {/* Toggle sidebar button */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute top-4 right-4 z-10 bg-black/40 hover:bg-black/60 text-white/70 hover:text-white
-                     w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-sm
-                     border border-white/10 transition-colors"
-        >
-          {sidebarOpen ? '→' : '←'}
-        </button>
+        {/* Toggle sidebar button - only show when sidebar is closed on mobile */}
+        {(!isMobile || !sidebarOpen) && (
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="absolute top-2 sm:top-4 right-2 sm:right-4 z-30 bg-black/60 hover:bg-black/80 text-white/90 hover:text-white
+                       w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-sm
+                       border border-white/20 transition-colors shadow-lg"
+          >
+            {sidebarOpen ? '→' : '👥'}
+          </button>
+        )}
 
         {/* Bottom-left links */}
         <div className="absolute bottom-4 left-4 z-10 flex gap-2">
@@ -215,6 +217,14 @@ export default function WatchPage() {
         </div>
       </div>
 
+      {/* Mobile backdrop overlay */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="absolute inset-0 bg-black/50 z-15 transition-opacity"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar - Absolute overlay on mobile, fixed width on desktop */}
       <div
         className={`
@@ -223,6 +233,19 @@ export default function WatchPage() {
           ${sidebarOpen ? (isMobile ? 'w-[85vw] max-w-[340px]' : 'w-[340px]') : 'w-0'}
         `}
       >
+        {/* Mobile close button header */}
+        {isMobile && sidebarOpen && (
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#1a1a35] shrink-0">
+            <span className="text-white/80 text-sm font-medium">👥 Agents Panel</span>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {selectedAgentId && (
           <div className="border-b border-white/10 max-h-[45%] overflow-y-auto scrollbar-thin">
             <AgentDetail
