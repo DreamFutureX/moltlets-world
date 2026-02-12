@@ -181,14 +181,31 @@ function isBuildPhase(): boolean {
   return process.env.NEXT_PHASE === 'phase-production-build';
 }
 
+// Deep no-op proxy that returns itself for any property/method chain
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createNoOpProxy(): any {
+  const handler: ProxyHandler<object> = {
+    get: (_, prop) => {
+      // Handle primitive conversions
+      if (prop === Symbol.toPrimitive) return () => 0;
+      if (prop === 'valueOf') return () => 0;
+      if (prop === 'toString') return () => '';
+      if (prop === 'toJSON') return () => null;
+      if (prop === 'then') return undefined; // Not a promise
+      if (prop === 'length') return 0;
+      if (prop === Symbol.iterator) return function* () {};
+      return createNoOpProxy();
+    },
+    apply: () => createNoOpProxy(),
+    has: () => false,
+  };
+  return new Proxy(function() {}, handler);
+}
+
 // Getters
 export function getDb(): BetterSQLite3Database<typeof schema> {
   if (isBuildPhase()) {
-    // Return a no-op proxy during build to prevent errors
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new Proxy({} as any, {
-      get: () => () => ({ get: () => null, all: () => [], run: () => ({}) }),
-    });
+    return createNoOpProxy();
   }
   if (!_db) {
     initializeDb();
@@ -198,11 +215,7 @@ export function getDb(): BetterSQLite3Database<typeof schema> {
 
 export function getSqlite(): Database.Database {
   if (isBuildPhase()) {
-    // Return a no-op proxy during build
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new Proxy({} as any, {
-      get: () => () => ({}),
-    });
+    return createNoOpProxy();
   }
   if (!_sqlite) {
     initializeDb();
