@@ -176,23 +176,36 @@ function initializeDb(): BetterSQLite3Database<typeof schema> | null {
   return _db;
 }
 
+// Check if we're in build phase
+function isBuildPhase(): boolean {
+  return process.env.NEXT_PHASE === 'phase-production-build';
+}
+
 // Getters
 export function getDb(): BetterSQLite3Database<typeof schema> {
+  if (isBuildPhase()) {
+    // Return a no-op proxy during build to prevent errors
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return new Proxy({} as any, {
+      get: () => () => ({ get: () => null, all: () => [], run: () => ({}) }),
+    });
+  }
   if (!_db) {
-    const result = initializeDb();
-    if (!result) {
-      throw new Error('Database not available during build');
-    }
+    initializeDb();
   }
   return _db!;
 }
 
 export function getSqlite(): Database.Database {
+  if (isBuildPhase()) {
+    // Return a no-op proxy during build
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return new Proxy({} as any, {
+      get: () => () => ({}),
+    });
+  }
   if (!_sqlite) {
     initializeDb();
-    if (!_sqlite) {
-      throw new Error('SQLite not available during build');
-    }
   }
   return _sqlite!;
 }
