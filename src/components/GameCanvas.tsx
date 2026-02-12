@@ -3564,9 +3564,12 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
     const canvas = canvasRef.current;
     if (!canvas) return;
     const dpr = window.devicePixelRatio || 1;
+    let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+
     const resize = () => {
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
+      if (w === 0 || h === 0) return; // Skip if canvas is hidden/transitioning
       if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
         canvas.width = w * dpr;
         canvas.height = h * dpr;
@@ -3574,9 +3577,16 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
         if (ctx) ctx.scale(dpr, dpr);
       }
     };
+
+    // Debounced resize for smooth sidebar transitions
+    const debouncedResize = () => {
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(resize, 50);
+    };
+
     resize();
-    // Use ResizeObserver to catch sidebar toggle resizes instantly
-    const observer = new ResizeObserver(() => resize());
+    // Use ResizeObserver to catch sidebar toggle resizes
+    const observer = new ResizeObserver(() => debouncedResize());
     observer.observe(canvas);
     window.addEventListener('resize', resize);
     if (!cameraInitRef.current) {
@@ -3593,7 +3603,12 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
       cameraInitRef.current = true;
     }
     animFrameRef.current = requestAnimationFrame(render);
-    return () => { observer.disconnect(); window.removeEventListener('resize', resize); cancelAnimationFrame(animFrameRef.current); };
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animFrameRef.current);
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+    };
   }, [render]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
