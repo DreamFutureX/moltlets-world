@@ -22,14 +22,16 @@ export async function GET(
     return NextResponse.json({ error: 'Claim not found' }, { status: 404 });
   }
 
-  // Check if agent exists (only after verification)
+  // Check if agent exists (only after verification) - INCLUDE API KEY for polling agents!
   let agentData = null;
   if (claim.status === 'verified' && claim.agentId && !claim.agentId.startsWith('{')) {
     const agent = db.select().from(agents).where(eq(agents.id, claim.agentId)).get();
     if (agent) {
       agentData = {
-        id: agent.id,
+        agentId: agent.id,
+        apiKey: agent.apiKey,
         walletAddress: agent.walletAddress,
+        position: { x: agent.posX, y: agent.posY },
       };
     }
   }
