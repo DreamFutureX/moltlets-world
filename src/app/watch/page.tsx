@@ -28,7 +28,8 @@ export default function WatchPage() {
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [focusTrigger, setFocusTrigger] = useState<{ id: string; ts: number } | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('agents');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Default closed, will open on desktop
   const [zoom, setZoom] = useState(1);
 
   const [agentCount, setAgentCount] = useState(0);
@@ -41,6 +42,21 @@ export default function WatchPage() {
     totalWood: number;
     activeConversations: number;
   } | null>(null);
+
+  // Detect mobile and set sidebar state
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+    };
+    checkMobile();
+    // Open sidebar by default on desktop only (on first load)
+    if (window.innerWidth >= 768) {
+      setSidebarOpen(true);
+    }
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const fetchCount = async () => {
@@ -82,46 +98,41 @@ export default function WatchPage() {
           zoomValue={zoom}
         />
 
-        {/* Top Header */}
-        <div className="absolute top-4 left-4 z-10 flex items-center gap-3 select-none pointer-events-none">
-          <div className="bg-black/40 text-white/90 text-sm font-medium px-4 py-2 rounded-lg backdrop-blur-sm border border-white/10 flex items-center gap-2">
-            <span>Moltlets World</span>
+        {/* Top Header - Mobile responsive */}
+        <div className="absolute top-2 sm:top-4 left-2 sm:left-4 right-14 sm:right-auto z-10 flex flex-wrap items-center gap-1.5 sm:gap-3 select-none pointer-events-none">
+          <div className="bg-black/50 text-white/90 text-xs sm:text-sm font-medium px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg backdrop-blur-sm border border-white/10 flex items-center gap-1.5 sm:gap-2">
+            <span className="hidden sm:inline">Moltlets World</span>
+            <span className="sm:hidden">M→W</span>
             <span className="w-1 h-1 bg-white/30 rounded-full" />
-            <span className="text-white/60">{agentCount} Agents</span>
+            <span className="text-white/60">{agentCount}</span>
+            <span className="hidden sm:inline text-white/60">Agents</span>
           </div>
 
-          <div className="bg-black/40 text-white/40 text-xs px-3 py-2 rounded-lg backdrop-blur-sm border border-white/10 flex items-center gap-2">
-            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
+          <div className="bg-black/50 text-white/40 text-[10px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg backdrop-blur-sm border border-white/10 flex items-center gap-1.5 sm:gap-2">
+            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
             LIVE
           </div>
 
-          {/* Date & Weather */}
+          {/* Date & Weather - Compact on mobile */}
           {worldTime && (
-            <div className="bg-black/40 text-white/90 text-sm px-4 py-2 rounded-lg backdrop-blur-sm border border-white/10 flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <span className="text-base">
+            <div className="bg-black/50 text-white/90 text-[10px] sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg backdrop-blur-sm border border-white/10 flex items-center gap-1.5 sm:gap-3">
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <span className="text-sm sm:text-base">
                   {worldTime.season === 'spring' ? '🌸' : worldTime.season === 'summer' ? '☀️' : worldTime.season === 'fall' ? '🍂' : '❄️'}
                 </span>
-                <span className="font-medium">Year {worldTime.year}</span>
-                <span className="text-white/40">•</span>
-                <span className="text-white/70">Month {worldTime.month}</span>
-                <span className="text-white/40">•</span>
-                <span className="text-white/70">Day {worldTime.day}</span>
-              </div>
-              <div className="w-px h-4 bg-white/20" />
-              <div className={`flex items-center gap-1.5 ${worldTime.isRaining ? 'text-sky-300' : 'text-white/70'}`}>
-                <span className="text-base">
-                  {worldTime.weather === 'sunny' ? '☀️' : worldTime.weather === 'cloudy' ? '☁️' : worldTime.weather === 'rainy' ? '🌧️' : '⛈️'}
-                </span>
-                <span>{worldTime.weather.charAt(0).toUpperCase() + worldTime.weather.slice(1)}</span>
-                {worldTime.isRaining && <span className="text-xs text-sky-400">🐟+</span>}
+                <span className="font-medium">Y{worldTime.year}</span>
+                <span className="hidden sm:inline text-white/40">•</span>
+                <span className="hidden sm:inline text-white/70">Month {worldTime.month}</span>
+                <span className="hidden sm:inline text-white/40">•</span>
+                <span className="hidden sm:inline text-white/70">Day {worldTime.day}</span>
+                <span className="sm:hidden text-white/70">M{worldTime.month} D{worldTime.day}</span>
               </div>
             </div>
           )}
 
-          {/* Town Stats */}
+          {/* Town Stats - Hidden on mobile */}
           {stats && (
-            <div className="bg-black/40 text-white/80 text-xs px-3 py-2 rounded-lg backdrop-blur-sm border border-white/10 flex items-center gap-3">
+            <div className="hidden md:flex bg-black/50 text-white/80 text-xs px-3 py-2 rounded-lg backdrop-blur-sm border border-white/10 items-center gap-3">
               <span className="text-amber-400" title="Town Economy">💰 ${stats.totalMoney.toLocaleString()}</span>
               <span className="text-green-400" title={`${stats.treesGrown} grown / ${stats.treesTotal} total trees`}>🌲 {stats.treesTotal > 0 ? Math.round((stats.treesGrown / stats.treesTotal) * 100) : 0}%</span>
               <span className="text-orange-400" title="Total Wood">🪵 {stats.totalWood}</span>
@@ -204,10 +215,13 @@ export default function WatchPage() {
         </div>
       </div>
 
-      {/* Sidebar */}
+      {/* Sidebar - Absolute overlay on mobile, fixed width on desktop */}
       <div
-        className={`shrink-0 bg-[#16162a] border-l border-white/5 flex flex-col overflow-hidden transition-[width] duration-300 ease-in-out ${sidebarOpen ? 'w-[340px]' : 'w-0'
-          }`}
+        className={`
+          ${isMobile ? 'absolute top-0 right-0 h-full z-20' : 'shrink-0'}
+          bg-[#16162a] border-l border-white/5 flex flex-col overflow-hidden transition-all duration-300 ease-in-out
+          ${sidebarOpen ? (isMobile ? 'w-[85vw] max-w-[340px]' : 'w-[340px]') : 'w-0'}
+        `}
       >
         {selectedAgentId && (
           <div className="border-b border-white/10 max-h-[45%] overflow-y-auto scrollbar-thin">
