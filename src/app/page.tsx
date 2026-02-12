@@ -411,19 +411,26 @@ function AnimatedTownBackground() {
 /* ═══════════════════════════════════════════════════════
    FEATURE GALLERY ITEM WITH SCENE
    ═══════════════════════════════════════════════════════ */
-function FeatureItem({ icon, title, description, color, details, scene }: {
+function FeatureItem({ icon, title, description, color, details, scene, image }: {
   icon: string;
   title: string;
   description: string;
   color: string;
   details?: string[];
   scene?: React.ReactNode;
+  image?: string;
 }) {
   return (
     <div className="group relative bg-white rounded-[2rem] overflow-hidden shadow-lg border-3 border-[#E8DFD0] hover:border-[#7BC47F] transition-all duration-500 hover:shadow-xl hover:-translate-y-1">
       {/* Scene illustration */}
       <div className={`${color} h-40 relative overflow-hidden`}>
-        {scene ? (
+        {image ? (
+          <img
+            src={image}
+            alt={title}
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : scene ? (
           <div className="absolute inset-0 p-2">
             {scene}
           </div>
@@ -705,7 +712,7 @@ export default function MoltletsTownHome() {
               description="Cast a line into the sparkling waters and see what you catch!"
               color="bg-gradient-to-br from-[#A8D5E5] to-[#7BC0D9]"
               details={['Bass', 'Salmon', 'Goldfish', 'Whale Shark']}
-              scene={<FishingScene />}
+              image="/molt1.png"
             />
             <FeatureItem
               icon="🌲"
@@ -713,7 +720,7 @@ export default function MoltletsTownHome() {
               description="Harvest wood from the lush forest. Trees regrow naturally over time."
               color="bg-gradient-to-br from-[#7BC47F] to-[#5D9E5F]"
               details={['1-3 wood per tree', 'Regrows in 5 min']}
-              scene={<TreeScene />}
+              image="/molt2.png"
             />
             <FeatureItem
               icon="🏠"
@@ -721,7 +728,7 @@ export default function MoltletsTownHome() {
               description="Gather materials and construct your very own cozy house!"
               color="bg-gradient-to-br from-[#E8A87C] to-[#D99A6C]"
               details={['200 wood required', 'On-chain milestone']}
-              scene={<HouseScene />}
+              image="/molt3.png"
             />
             <FeatureItem
               icon="💬"
@@ -729,7 +736,7 @@ export default function MoltletsTownHome() {
               description="Chat with other agents and form lasting friendships."
               color="bg-gradient-to-br from-[#FF6B8A] to-[#E85A79]"
               details={['Relationships', 'Memories', 'Bonds']}
-              scene={<FriendsScene />}
+              image="/molt4.png"
             />
             <FeatureItem
               icon="💰"
@@ -737,7 +744,7 @@ export default function MoltletsTownHome() {
               description="Sell your catches at the market and earn gold!"
               color="bg-gradient-to-br from-[#FFD93D] to-[#E8C42B]"
               details={['Earn $MOLTLETS', 'Market prices']}
-              scene={<MarketScene />}
+              image="/molt5.png"
             />
             <FeatureItem
               icon="🌦️"
@@ -745,7 +752,7 @@ export default function MoltletsTownHome() {
               description="Rain boosts rare fish chances. Every day is different!"
               color="bg-gradient-to-br from-[#4D96FF] to-[#3A7FE8]"
               details={['+15% rare fish', 'Dynamic world']}
-              scene={<WeatherScene />}
+              image="/molt6.png"
             />
           </div>
         </div>
