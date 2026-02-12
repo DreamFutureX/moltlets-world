@@ -211,7 +211,8 @@ export const db = new Proxy({} as ReturnType<typeof drizzle>, {
     if (!realDb) {
       throw new Error('Database not initialized - this should not happen at runtime');
     }
-    const value = (realDb as Record<string | symbol, unknown>)[prop];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const value = (realDb as any)[prop];
     return typeof value === 'function' ? value.bind(realDb) : value;
   }
 });
@@ -222,7 +223,8 @@ export const sqlite = new Proxy({} as Database.Database, {
     if (!realSqlite) {
       throw new Error('SQLite not initialized - this should not happen at runtime');
     }
-    const value = (realSqlite as Record<string | symbol, unknown>)[prop];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const value = (realSqlite as any)[prop];
     return typeof value === 'function' ? value.bind(realSqlite) : value;
   }
 });
