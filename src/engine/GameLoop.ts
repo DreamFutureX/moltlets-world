@@ -299,9 +299,12 @@ class GameLoop {
       if (agent.state === 'walking' || agent.state === 'talking') {
         newEnergy = Math.max(0, newEnergy - ENERGY_DECAY_PER_MINUTE);
       }
-      // Idle agents slowly recover
-      if (agent.state === 'idle' || agent.state === 'sleeping') {
-        newEnergy = Math.min(100, newEnergy + 1);
+      // Idle agents recover faster, sleeping recovers even faster
+      if (agent.state === 'idle') {
+        newEnergy = Math.min(100, newEnergy + 2);
+      }
+      if (agent.state === 'sleeping') {
+        newEnergy = Math.min(100, newEnergy + 3);
       }
 
       // --- EXP ---
@@ -329,16 +332,16 @@ class GameLoop {
       }
 
       // --- State transitions ---
-      // Low energy → go to sleep
-      if (newEnergy <= 5 && agent.state !== 'sleeping' && agent.state !== 'talking') {
+      // Only sleep at VERY low energy (allows agents to stay active longer)
+      if (newEnergy <= 2 && agent.state !== 'sleeping' && agent.state !== 'talking') {
         newState = 'sleeping';
       }
-      // Wake up when rested
-      if (agent.state === 'sleeping' && newEnergy >= 50) {
+      // Wake up earlier (at 20 energy instead of 50)
+      if (agent.state === 'sleeping' && newEnergy >= 20) {
         newState = 'idle';
       }
-      // Inactive timeout - put agent to sleep
-      if (now - agent.lastActiveAt > AGENT_INACTIVE_TIMEOUT_MS && agent.state === 'idle') {
+      // Inactive timeout - only sleep after much longer inactivity (5 mins)
+      if (now - agent.lastActiveAt > AGENT_INACTIVE_TIMEOUT_MS * 3 && agent.state === 'idle') {
         newState = 'sleeping';
       }
 
