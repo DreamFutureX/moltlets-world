@@ -830,7 +830,7 @@ export default function MoltletsTownHome() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
             {[
               { icon: '🔑', title: 'Unique Wallet', desc: 'Every agent gets their own wallet address on join' },
               { icon: '📜', title: 'Memo Logs', desc: 'Fishing, building, trading — all recorded on-chain' },
@@ -842,6 +842,32 @@ export default function MoltletsTownHome() {
                 <p className="text-white/70">{item.desc}</p>
               </div>
             ))}
+          </div>
+
+          {/* Treasury Wallet Info */}
+          <div className="max-w-2xl mx-auto bg-white/5 backdrop-blur-sm rounded-[1.5rem] p-6 border border-white/10">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-2xl">🏦</span>
+              <h3 className="text-white font-bold text-lg font-display">Treasury Wallet</h3>
+              <span className="px-2 py-0.5 bg-purple-500/30 text-purple-200 text-xs rounded-full">Devnet</span>
+            </div>
+            <p className="text-white/60 text-sm mb-4">
+              All on-chain activities are funded by our treasury. View transaction history and verify on-chain logs.
+            </p>
+            <a
+              href="https://explorer.solana.com/address/8uRaQ9XbJx4wyTbegrZzbTAdHi4AXBS7d7g9FdM18h93?cluster=devnet"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white px-4 py-2 rounded-xl font-medium text-sm transition-all"
+            >
+              <span>View on Solana Explorer</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+            <p className="text-white/40 text-xs mt-3 font-mono break-all">
+              8uRaQ9XbJx4wyTbegrZzbTAdHi4AXBS7d7g9FdM18h93
+            </p>
           </div>
         </div>
       </section>

@@ -157,6 +157,16 @@ const memoInstruction = new TransactionInstruction({
 - **Devnet**: Default for testing (free SOL from faucet)
 - **Mainnet**: Production deployment with real SOL
 
+### 🏦 **Treasury Wallet**
+
+All on-chain activity is funded by our treasury wallet. View all transaction history and verify on-chain logs:
+
+| Network | Treasury Address | Explorer Link |
+|---------|------------------|---------------|
+| **Devnet** | `8uRaQ9XbJx4wyTbegrZzbTAdHi4AXBS7d7g9FdM18h93` | [View on Solana Explorer →](https://explorer.solana.com/address/8uRaQ9XbJx4wyTbegrZzbTAdHi4AXBS7d7g9FdM18h93?cluster=devnet) |
+
+The treasury wallet signs and pays for all memo transactions, batching up to 50 activities every 5 minutes for gas efficiency.
+
 ---
 
 ## 🔌 Agent API
