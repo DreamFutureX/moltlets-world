@@ -595,52 +595,76 @@ export function tickNpcBehavior(): void {
   }
 
   for (const npc of npcAgents) {
+    // LOW ENERGY = Still active, just social only (no resource gathering)
+    // They can walk slowly and chat - more fun than sleeping!
+    const isLowEnergy = npc.energy < 20;
+
+    // Wake up sleeping NPCs if they have any energy at all
+    if (npc.state === 'sleeping' && npc.energy > 5) {
+      db.update(agents).set({ state: 'idle' }).where(eq(agents.id, npc.id)).run();
+      continue;
+    }
+
     if (npc.state === 'sleeping') continue;
-    if (npc.energy < 15) continue;
 
     const activeConvo = getActiveConversation(npc.id);
 
     if (activeConvo && activeConvo.state === 'active') {
       // NPC is in a conversation — generate dialogue
       tickNpcDialogue(npc.id, activeConvo.id);
-    } else if (npc.state === 'idle') {
+    } else if (npc.state === 'idle' || npc.state === 'walking') {
       // ═══════════════════════════════════════════════════════════
-      // ALL NPCs LIFECYCLE: Build House → Socialize → Earn Money
+      // LOW ENERGY MODE: Only socialize and wander (no resource work)
       // ═══════════════════════════════════════════════════════════
-
-      // Check if NPC already has a completed house
-      const existingBuildings = getBuildingsByAgent(npc.id);
-      const hasCompleteHouse = existingBuildings.length > 0 && existingBuildings[0].state === 'complete';
-
-      if (!hasCompleteHouse) {
-        // PHASE 1: Build house first! (highest priority)
-        // 50% build/gather for house, 35% socialize (build relationships), 15% earn money
+      if (isLowEnergy) {
+        // Low energy = 80% socialize, 20% wander slowly
         const roll = Math.random();
-        if (roll < 0.50) {
-          tryBuildHouse(npc.id);
-        } else if (roll < 0.85) {
-          // Socialize - important for building relationships!
+        if (roll < 0.80) {
           tryStartNpcConversation(npc.id);
         } else {
-          // Earn some money on the side
-          tryEarnMoney(npc.id);
-        }
-      } else {
-        // PHASE 2: House complete! Focus on socializing and earning
-        // 40% socialize (maintain relationships), 45% earn money, 15% wander/explore
-        const roll = Math.random();
-        if (roll < 0.40) {
-          tryStartNpcConversation(npc.id);
-        } else if (roll < 0.85) {
-          tryEarnMoney(npc.id);
-        } else {
-          // Just wander and explore
           world.wanderAgent(npc.id);
         }
+        continue;
       }
-    } else if (npc.state === 'walking') {
-      // Check if near any resource to interact with
-      maybeInteractNearby(npc.id);
+
+      // ═══════════════════════════════════════════════════════════
+      // NORMAL ENERGY: Build House → Socialize → Earn Money
+      // ═══════════════════════════════════════════════════════════
+      if (npc.state === 'idle') {
+        // Check if NPC already has a completed house
+        const existingBuildings = getBuildingsByAgent(npc.id);
+        const hasCompleteHouse = existingBuildings.length > 0 && existingBuildings[0].state === 'complete';
+
+        if (!hasCompleteHouse) {
+          // PHASE 1: Build house first! (highest priority)
+          // 50% build/gather for house, 35% socialize (build relationships), 15% earn money
+          const roll = Math.random();
+          if (roll < 0.50) {
+            tryBuildHouse(npc.id);
+          } else if (roll < 0.85) {
+            // Socialize - important for building relationships!
+            tryStartNpcConversation(npc.id);
+          } else {
+            // Earn some money on the side
+            tryEarnMoney(npc.id);
+          }
+        } else {
+          // PHASE 2: House complete! Focus on socializing and earning
+          // 40% socialize (maintain relationships), 45% earn money, 15% wander/explore
+          const roll = Math.random();
+          if (roll < 0.40) {
+            tryStartNpcConversation(npc.id);
+          } else if (roll < 0.85) {
+            tryEarnMoney(npc.id);
+          } else {
+            // Just wander and explore
+            world.wanderAgent(npc.id);
+          }
+        }
+      } else if (npc.state === 'walking') {
+        // Check if near any resource to interact with
+        maybeInteractNearby(npc.id);
+      }
     }
   }
 }
