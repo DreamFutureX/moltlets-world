@@ -11,6 +11,7 @@ import { spawnNpcs, tickNpcBehavior, cleanupNpcConvos } from './NpcBrain';
 import { tickTreeRegrowth, loadTreeStates, getTreeCache, setIsRainingFn } from './Resources';
 import { initWorldTime, tickWeather, tickTime, tickTreeSpawning, setWorldMapRef, setTreeCacheRef, getWorldTime, isRaining } from './WorldTime';
 import { loadBuildings, getAllBuildings, setWorldMapRefForBuildings } from './Buildings';
+import { initSolana } from '@/lib/solana';
 import { db, batchUpdate, runCheckpoint, cleanupOldEvents, safeDbOperation } from '@/db';
 import { agents } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -84,6 +85,9 @@ class GameLoop {
 
     // Spawn NPC agents
     spawnNpcs();
+
+    // Initialize Solana on-chain logging
+    initSolana();
 
     // Main tick: movement + conversation updates
     this.tickInterval = setInterval(() => {

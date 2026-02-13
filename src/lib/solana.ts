@@ -25,6 +25,12 @@ function getConnection(): Connection {
 }
 
 // ═══════════════════════════════════════════════════════════
+// Startup Diagnostics
+// ═══════════════════════════════════════════════════════════
+
+console.log(`[Solana] Config: network=${SOLANA_NETWORK}, rpc=${RPC_URL}, treasury=${process.env.SOLANA_TREASURY_SECRET_KEY ? '✅ CONFIGURED' : '⚠️ MISSING — on-chain logging disabled!'}`);
+
+// ═══════════════════════════════════════════════════════════
 // Wallet Generation
 // ═══════════════════════════════════════════════════════════
 
@@ -99,6 +105,9 @@ const activityQueue: ActivityLog[] = [];
 let batchTimer: NodeJS.Timeout | null = null;
 const BATCH_INTERVAL = 5 * 60 * 1000; // 5 minutes - batch more to save gas
 const BATCH_SIZE = 50; // 50 activities per transaction - fewer txs = less gas
+const TX_TIMEOUT_MS = 30_000; // 30s timeout for sendAndConfirmTransaction
+const MAX_BATCH_RETRIES = 3; // Drop batch after this many consecutive failures
+let consecutiveFailures = 0;
 
 // Treasury keypair for paying transaction fees (fund this on devnet)
 let treasuryKeypair: Keypair | null = null;
@@ -124,8 +133,36 @@ function getTreasuryKeypair(): Keypair | null {
 }
 
 /**
+ * Initialize Solana subsystem — call from GameLoop on startup.
+ * Validates treasury key and starts heartbeat to prevent timer drift.
+ */
+export function initSolana(): void {
+  const treasury = getTreasuryKeypair();
+  if (treasury) {
+    console.log(`[Solana] ✅ On-chain logging active — treasury: ${treasury.publicKey.toBase58()}`);
+    // Check balance at startup
+    getWalletBalance(treasury.publicKey.toBase58()).then(bal => {
+      console.log(`[Solana] Treasury balance: ${bal.toFixed(4)} SOL`);
+      if (bal < 0.01) {
+        console.warn('[Solana] ⚠️ Treasury balance low! Transactions may fail. Airdrop SOL on devnet.');
+      }
+    });
+  } else {
+    console.warn('[Solana] ❌ On-chain logging DISABLED — set SOLANA_TREASURY_SECRET_KEY env var');
+  }
+
+  // Heartbeat: failsafe interval to flush stuck queues every 5 minutes
+  setInterval(() => {
+    if (activityQueue.length > 0) {
+      console.log(`[Solana] Heartbeat: ${activityQueue.length} activities queued, flushing...`);
+      flushActivityBatch();
+    }
+  }, BATCH_INTERVAL);
+}
+
+/**
  * Queue an activity for batch logging to Solana.
- * Activities are batched and sent every minute to save on fees.
+ * Activities are batched and sent every 5 minutes to save on fees.
  */
 export function logActivity(
   type: ActivityType,
@@ -210,20 +247,35 @@ async function flushActivityBatch(): Promise<void> {
 
     const transaction = new Transaction().add(memoInstruction);
 
-    // Send transaction
-    const signature = await sendAndConfirmTransaction(conn, transaction, [treasury]);
+    // Send transaction with timeout to prevent hanging
+    const txPromise = sendAndConfirmTransaction(conn, transaction, [treasury]);
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`Transaction timeout after ${TX_TIMEOUT_MS / 1000}s`)), TX_TIMEOUT_MS)
+    );
+    const signature = await Promise.race([txPromise, timeoutPromise]);
 
-    console.log(`[Solana] Logged ${batch.length} activities: ${signature}`);
+    console.log(`[Solana] ✅ Logged ${batch.length} activities: ${signature}`);
     console.log(`[Solana] View: https://explorer.solana.com/tx/${signature}?cluster=${SOLANA_NETWORK}`);
+    consecutiveFailures = 0; // Reset on success
   } catch (e) {
-    console.error('[Solana] Failed to log activities:', e);
-    // Re-queue failed activities
-    activityQueue.unshift(...batch);
+    consecutiveFailures++;
+    const errMsg = e instanceof Error ? e.message : String(e);
+    console.error(`[Solana] ❌ Failed to log activities (attempt ${consecutiveFailures}/${MAX_BATCH_RETRIES}): ${errMsg}`);
+
+    if (consecutiveFailures >= MAX_BATCH_RETRIES) {
+      console.error(`[Solana] ⚠️ Dropping ${batch.length} activities after ${MAX_BATCH_RETRIES} consecutive failures`);
+      consecutiveFailures = 0; // Reset so future batches can try
+    } else {
+      // Re-queue failed activities for retry
+      activityQueue.unshift(...batch);
+    }
   }
 
   // Schedule next batch if more activities queued
   if (activityQueue.length > 0 && !batchTimer) {
-    batchTimer = setTimeout(flushActivityBatch, BATCH_INTERVAL);
+    // Use shorter interval after failure for quicker retry
+    const nextInterval = consecutiveFailures > 0 ? BATCH_INTERVAL * 2 : BATCH_INTERVAL;
+    batchTimer = setTimeout(flushActivityBatch, nextInterval);
   }
 }
 
