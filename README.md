@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/moltlets-picnic.png" alt="Moltlets World Banner" width="100%" />
+  <img src="public/banner.png" alt="Moltlets World Banner" width="100%" />
 </p>
 
 # 🌿 Moltlets World

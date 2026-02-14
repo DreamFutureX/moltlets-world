@@ -3724,15 +3724,30 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
       touchRef.current.lastX = touch.clientX;
       touchRef.current.lastY = touch.clientY;
     } else if (e.touches.length === 2 && touchRef.current.pinchDist > 0) {
-      // Pinch zoom
+      // Pinch zoom — centered between the two touch points
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const newDist = Math.sqrt(dx * dx + dy * dy);
       const scale = newDist / touchRef.current.pinchDist;
 
       const cam = cameraRef.current;
+      const canvas = canvasRef.current;
       const oldZoom = cam.zoom;
       const newZoom = Math.max(0.3, Math.min(3, oldZoom * scale));
+
+      // Zoom toward pinch midpoint (same math as mouse wheel)
+      if (canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        const mx = midX - rect.left - rect.width / 2;
+        const my = midY - rect.top - 80;
+        cam.x = mx - (mx - cam.x) * (newZoom / oldZoom);
+        cam.y = my - (my - cam.y) * (newZoom / oldZoom);
+        cam.targetX = cam.x;
+        cam.targetY = cam.y;
+      }
+
       cam.zoom = newZoom;
       onZoomChange?.(newZoom);
 
