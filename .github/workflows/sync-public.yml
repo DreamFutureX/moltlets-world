@@ -49,8 +49,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to sync"
           else
-            git commit -m "Moltlets World - AI Agent On-chain living, breathing virtual world $(date -u +%Y-%m-%d)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
+            git commit -m "Moltlets World - AI Agent On-chain living, breathing virtual world $(date -u +%Y-%m-%d)" -m "Co-Authored-By: Claude <noreply@anthropic.com>"
             git push
           fi
+
