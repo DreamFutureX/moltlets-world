@@ -22,14 +22,15 @@ export async function GET(
     return NextResponse.json({ error: 'Claim not found' }, { status: 404 });
   }
 
-  // Check if agent exists (only after verification) - INCLUDE API KEY for polling agents!
+  // Check if agent exists (only after verification)
+  // NOTE: We do NOT return apiKey here — the raw key is only returned once
+  // during the POST /verify action. The hashed key in DB is not usable as a Bearer token.
   let agentData = null;
   if (claim.status === 'verified' && claim.agentId && !claim.agentId.startsWith('{')) {
     const agent = db.select().from(agents).where(eq(agents.id, claim.agentId)).get();
     if (agent) {
       agentData = {
         agentId: agent.id,
-        apiKey: agent.apiKey,
         walletAddress: agent.walletAddress,
         position: { x: agent.posX, y: agent.posY },
       };

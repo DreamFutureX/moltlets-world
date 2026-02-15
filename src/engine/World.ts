@@ -777,14 +777,18 @@ class World {
    * Get all agents as typed data.
    */
   getAllAgents(): AgentData[] {
-    return db.select().from(agents).all().map(a => ({
-      ...a,
-      personality: JSON.parse(a.personality),
-      appearance: JSON.parse(a.appearance),
-      inventory: parseInventory(a.inventory),
-      posX: a.posX,
-      posY: a.posY,
-    })) as AgentData[];
+    return db.select().from(agents).all().map(a => {
+      // Strip sensitive fields — never expose apiKey or walletSecret
+      const { apiKey: _k, ...safe } = a;
+      return {
+        ...safe,
+        personality: JSON.parse(a.personality),
+        appearance: JSON.parse(a.appearance),
+        inventory: parseInventory(a.inventory),
+        posX: a.posX,
+        posY: a.posY,
+      };
+    }) as AgentData[];
   }
 
   /**
