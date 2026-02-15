@@ -44,6 +44,7 @@ SYNC_FILES=(
 SYNC_ASSETS=(
   "public/logo.png"
   "public/moltlets-town-music.mp3"
+  "public/banner.png"
   "public/file.svg"
   "public/globe.svg"
   "public/next.svg"
