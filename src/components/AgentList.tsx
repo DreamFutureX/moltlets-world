@@ -43,7 +43,7 @@ export default function AgentList({ onAgentSelect, selectedAgentId }: AgentListP
     };
 
     fetchAgents();
-    const interval = setInterval(fetchAgents, 3000);
+    const interval = setInterval(fetchAgents, 8000);
     return () => clearInterval(interval);
   }, []);
 

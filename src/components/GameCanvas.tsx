@@ -3422,13 +3422,20 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
     animFrameRef.current = requestAnimationFrame(render);
   }, [gridToScreen, drawTile, drawGrass, drawPath, drawWater, drawStone, drawTree, drawFlower, drawBuilding, drawPlayerBuilding, drawBridge, drawSand, drawDock, drawFence, drawGarden, drawFlowerField, drawAgent, drawSpeechBubble, drawEmote, selectedAgentId]);
 
-  const fetchWorldState = useCallback(async () => {
+  const mapLoadedRef = useRef(false);
+
+  const fetchWorldState = useCallback(async (includeMap = false) => {
     try {
-      const res = await fetch('/api/world/state');
+      const url = includeMap ? '/api/world/state?includeMap=1' : '/api/world/state';
+      const res = await fetch(url);
       const data = await res.json();
       agentsRef.current = data.agents || [];
-      tilesRef.current = data.map?.tiles || [];
-      obstaclesRef.current = data.map?.obstacles || [];
+      // Only update tiles if map data is present (first load only)
+      if (data.map) {
+        tilesRef.current = data.map.tiles || [];
+        obstaclesRef.current = data.map.obstacles || [];
+        mapLoadedRef.current = true;
+      }
       treeStatesRef.current = data.treeStates || {};
       buildingsRef.current = data.buildings || [];
       // Build spatial index for buildings (O(1) lookup)
@@ -3444,7 +3451,7 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
   }, []);
 
   useEffect(() => {
-    fetchWorldState();
+    fetchWorldState(true); // First load: include map tiles
     const evtSource = new EventSource('/api/stream');
     evtSource.onmessage = (e) => {
       try {
