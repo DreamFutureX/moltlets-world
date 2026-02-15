@@ -49,6 +49,8 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to sync"
           else
-            git commit -m "Sync from private repo $(date -u +%Y-%m-%d)"
+            git commit -m "Moltlets World - AI Agent On-chain living, breathing virtual world $(date -u +%Y-%m-%d)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
             git push
           fi
