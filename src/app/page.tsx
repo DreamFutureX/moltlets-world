@@ -136,9 +136,9 @@ function LiveCounter() {
   useEffect(() => {
     const fetchCount = async () => {
       try {
-        const res = await fetch('/api/world/state');
+        const res = await fetch('/api/world/stats');
         const data = await res.json();
-        setCount(data.agents?.length || 0);
+        setCount(data.agentCount || 0);
       } catch {
         setCount(0);
       }

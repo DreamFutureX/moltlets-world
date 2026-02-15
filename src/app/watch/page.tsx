@@ -59,17 +59,17 @@ export default function WatchPage() {
   }, []);
 
   useEffect(() => {
-    const fetchCount = async () => {
+    const fetchStats = async () => {
       try {
-        const res = await fetch('/api/world/state');
+        const res = await fetch('/api/world/stats');
         const data = await res.json();
-        setAgentCount(data.agents?.length || 0);
+        setAgentCount(data.agentCount || 0);
         if (data.time) setWorldTime(data.time);
         if (data.stats) setStats(data.stats);
       } catch { /* ignore */ }
     };
-    fetchCount();
-    const interval = setInterval(fetchCount, 5000);
+    fetchStats();
+    const interval = setInterval(fetchStats, 5000);
     return () => clearInterval(interval);
   }, []);
 
