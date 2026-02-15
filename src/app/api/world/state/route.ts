@@ -13,7 +13,9 @@ import { getWorldTime } from '@/engine/WorldTime';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const includeMap = url.searchParams.get('includeMap') === '1';
   const allAgents = world.getAllAgents();
 
   // Build agent name lookup map ONCE (eliminates N+1 queries)
@@ -123,12 +125,15 @@ export async function GET() {
       totalRelationships: allRels.length,
       stateCount,
     },
-    map: {
-      width: world.map.width,
-      height: world.map.height,
-      tiles: world.map.tiles,
-      obstacles: world.map.obstacles,
-    },
+    // Only include map tiles on first load (static terrain, ~500KB)
+    ...(includeMap ? {
+      map: {
+        width: world.map.width,
+        height: world.map.height,
+        tiles: world.map.tiles,
+        obstacles: world.map.obstacles,
+      },
+    } : {}),
   });
 }
 
