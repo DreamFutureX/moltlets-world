@@ -5,6 +5,7 @@
 // ============================================================
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 interface AgentInfo {
   id: string;
@@ -219,6 +220,14 @@ export default function AgentDetail({ agentId, onClose }: AgentDetailProps) {
       <div className="text-[10px] text-white/40 truncate italic" title={agent.bio}>
         &ldquo;{agent.bio}&rdquo;
       </div>
+
+      {/* Row 5: Profile & Diary link */}
+      <Link
+        href={`/agent/${agentId}`}
+        className="flex items-center justify-center gap-1.5 text-[11px] text-amber-300/70 hover:text-amber-200 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 transition-all"
+      >
+        <span>View Profile & Diary</span>
+      </Link>
     </div>
   );
 }

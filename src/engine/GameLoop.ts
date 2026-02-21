@@ -11,6 +11,7 @@ import { spawnNpcs, tickNpcBehavior, cleanupNpcConvos } from './NpcBrain';
 import { tickTreeRegrowth, loadTreeStates, getTreeCache, setIsRainingFn } from './Resources';
 import { initWorldTime, tickWeather, tickTime, tickTreeSpawning, setWorldMapRef, setTreeCacheRef, getWorldTime, isRaining } from './WorldTime';
 import { loadBuildings, getAllBuildings, setWorldMapRefForBuildings } from './Buildings';
+import { generateDiaries } from './Diary';
 import { initSolana } from '@/lib/solana';
 import { db, batchUpdate, runCheckpoint, cleanupOldEvents, safeDbOperation } from '@/db';
 import { agents } from '@/db/schema';
@@ -38,6 +39,7 @@ class GameLoop {
   private weatherInterval: ReturnType<typeof setInterval> | null = null;
   private treeSpawnInterval: ReturnType<typeof setInterval> | null = null;
   private maintenanceInterval: ReturnType<typeof setInterval> | null = null;
+  private diaryInterval: ReturnType<typeof setInterval> | null = null;
   private tickCount = 0;
   private running = false;
   private lastTickTime = 0;
@@ -161,6 +163,20 @@ class GameLoop {
       }
     }, 5 * 60 * 1000);
 
+    // Diary generation: every 4 hours (also run once at startup for missed periods)
+    this.diaryInterval = setInterval(() => {
+      try {
+        generateDiaries();
+      } catch (err) {
+        console.error('[GameLoop] Diary generation error:', err);
+      }
+    }, 4 * 60 * 60 * 1000);
+
+    // Generate any missed diaries on startup (delayed 30s to let things settle)
+    setTimeout(() => {
+      try { generateDiaries(); } catch {}
+    }, 30000);
+
     console.log('[GameLoop] All systems initialized');
   }
 
@@ -179,6 +195,7 @@ class GameLoop {
     if (this.weatherInterval) clearInterval(this.weatherInterval);
     if (this.treeSpawnInterval) clearInterval(this.treeSpawnInterval);
     if (this.maintenanceInterval) clearInterval(this.maintenanceInterval);
+    if (this.diaryInterval) clearInterval(this.diaryInterval);
 
     this.tickInterval = null;
     this.wanderInterval = null;
@@ -188,6 +205,7 @@ class GameLoop {
     this.weatherInterval = null;
     this.treeSpawnInterval = null;
     this.maintenanceInterval = null;
+    this.diaryInterval = null;
 
     // Final checkpoint before shutdown
     try {

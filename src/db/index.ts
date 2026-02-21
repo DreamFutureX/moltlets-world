@@ -133,6 +133,16 @@ function initializeDb(): BetterSQLite3Database<typeof schema> | null {
         completed_at INTEGER
       );
 
+      CREATE TABLE IF NOT EXISTS agent_diary (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        agent_id TEXT NOT NULL REFERENCES agents(id),
+        period_start INTEGER NOT NULL,
+        period_end INTEGER NOT NULL,
+        summary TEXT NOT NULL DEFAULT '[]',
+        stats TEXT NOT NULL DEFAULT '{}',
+        created_at INTEGER NOT NULL
+      );
+
       CREATE TABLE IF NOT EXISTS agent_claims (
         id TEXT PRIMARY KEY,
         agent_id TEXT,
@@ -166,6 +176,7 @@ function initializeDb(): BetterSQLite3Database<typeof schema> | null {
       `CREATE INDEX IF NOT EXISTS idx_events_created ON events(created_at)`,
       `CREATE INDEX IF NOT EXISTS idx_buildings_owner ON buildings(owner_agent_id)`,
       `CREATE INDEX IF NOT EXISTS idx_tree_states_coords ON tree_states(x, y)`,
+      `CREATE INDEX IF NOT EXISTS idx_agent_diary_agent_period ON agent_diary(agent_id, period_end)`,
       `CREATE INDEX IF NOT EXISTS idx_agent_claims_status ON agent_claims(status)`,
     ];
 

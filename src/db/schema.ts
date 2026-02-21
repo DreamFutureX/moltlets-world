@@ -106,6 +106,17 @@ export const buildings = sqliteTable('buildings', {
   completedAt: integer('completed_at'),
 });
 
+// --- Agent Diary (6-hour summaries) ---
+export const agentDiary = sqliteTable('agent_diary', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  agentId: text('agent_id').notNull().references(() => agents.id),
+  periodStart: integer('period_start').notNull(),
+  periodEnd: integer('period_end').notNull(),
+  summary: text('summary').notNull().default('[]'),     // JSON array of diary entries
+  stats: text('stats').notNull().default('{}'),          // JSON aggregate stats
+  createdAt: integer('created_at').notNull(),
+});
+
 // --- Agent Claims (human verification) ---
 export const agentClaims = sqliteTable('agent_claims', {
   id: text('id').primaryKey(),                                    // claim token
