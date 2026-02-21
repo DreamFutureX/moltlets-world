@@ -165,8 +165,8 @@ export const DEFAULT_COLORS = [
 ];
 
 export const VARIANT_OPTIONS = ['lobster-bot', 'moltlet', 'blob', 'bunny', 'catbot'] as const;
-export const HAT_OPTIONS = ['none', 'tophat', 'cap', 'crown', 'flower', 'antenna', 'beret', 'wizard', 'headband', 'halo'] as const;
-export const ACCESSORY_OPTIONS = ['none', 'glasses', 'bowtie', 'bandana', 'earring', 'eyeglass', 'moustache', 'scarf', 'heart_necklace', 'star_pin', 'blush', 'flower_crown', 'butterfly'] as const;
+export const HAT_OPTIONS = ['none', 'tophat', 'cap', 'crown', 'flower', 'antenna', 'beret', 'wizard', 'headband', 'halo', 'straw_hat', 'frog_hat', 'viking', 'pirate', 'party_hat', 'santa_hat'] as const;
+export const ACCESSORY_OPTIONS = ['none', 'glasses', 'bowtie', 'bandana', 'earring', 'eyeglass', 'moustache', 'scarf', 'heart_necklace', 'star_pin', 'blush', 'flower_crown', 'butterfly', 'backpack', 'icecream', 'monocle', 'wings'] as const;
 export const EXPRESSION_OPTIONS = ['happy', 'neutral', 'sleepy', 'angry'] as const;
 
 // --- Map Tile Types ---

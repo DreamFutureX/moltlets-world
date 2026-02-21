@@ -1607,6 +1607,96 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
     }
 
     // ══════════════════════════════════════════════
+    //   PRE-BODY ACCESSORIES (render behind body)
+    // ══════════════════════════════════════════════
+    if (appearance.accessory === 'butterfly') {
+      // ── Butterfly Wings: Fairy-like translucent wings (behind body) ──
+      // Left wing (top)
+      ctx.fillStyle = 'rgba(180,100,255,0.4)';
+      ctx.beginPath();
+      ctx.moveTo(sx - 4, sy - 10);
+      ctx.bezierCurveTo(sx - 18, sy - 18, sx - 20, sy - 2, sx - 4, sy - 6);
+      ctx.closePath(); ctx.fill();
+      // Left wing (bottom)
+      ctx.fillStyle = 'rgba(140,80,220,0.35)';
+      ctx.beginPath();
+      ctx.moveTo(sx - 4, sy - 4);
+      ctx.bezierCurveTo(sx - 14, sy - 2, sx - 14, sy + 8, sx - 4, sy + 2);
+      ctx.closePath(); ctx.fill();
+      // Right wing (top)
+      ctx.fillStyle = 'rgba(180,100,255,0.4)';
+      ctx.beginPath();
+      ctx.moveTo(sx + 4, sy - 10);
+      ctx.bezierCurveTo(sx + 18, sy - 18, sx + 20, sy - 2, sx + 4, sy - 6);
+      ctx.closePath(); ctx.fill();
+      // Right wing (bottom)
+      ctx.fillStyle = 'rgba(140,80,220,0.35)';
+      ctx.beginPath();
+      ctx.moveTo(sx + 4, sy - 4);
+      ctx.bezierCurveTo(sx + 14, sy - 2, sx + 14, sy + 8, sx + 4, sy + 2);
+      ctx.closePath(); ctx.fill();
+      // Wing patterns (circles)
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.beginPath(); ctx.arc(sx - 12, sy - 10, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 12, sy - 10, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx - 10, sy, 1.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 10, sy, 1.5, 0, Math.PI * 2); ctx.fill();
+      // Wing edges
+      ctx.strokeStyle = 'rgba(150,80,200,0.5)'; ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(sx - 4, sy - 10);
+      ctx.bezierCurveTo(sx - 18, sy - 18, sx - 20, sy - 2, sx - 4, sy - 6);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(sx + 4, sy - 10);
+      ctx.bezierCurveTo(sx + 18, sy - 18, sx + 20, sy - 2, sx + 4, sy - 6);
+      ctx.stroke();
+    }
+    if (appearance.accessory === 'wings') {
+      // ── Wings: Small fairy/angel wings on back (behind body) ──
+      // Left wing
+      ctx.fillStyle = 'rgba(200,230,255,0.4)';
+      ctx.beginPath();
+      ctx.moveTo(sx - 4, sy - 10);
+      ctx.bezierCurveTo(sx - 20, sy - 20, sx - 22, sy - 4, sx - 4, sy - 4);
+      ctx.closePath(); ctx.fill();
+      // Left wing inner
+      ctx.fillStyle = 'rgba(220,240,255,0.3)';
+      ctx.beginPath();
+      ctx.moveTo(sx - 5, sy - 9);
+      ctx.bezierCurveTo(sx - 16, sy - 16, sx - 17, sy - 5, sx - 5, sy - 5);
+      ctx.closePath(); ctx.fill();
+      // Right wing
+      ctx.fillStyle = 'rgba(200,230,255,0.4)';
+      ctx.beginPath();
+      ctx.moveTo(sx + 4, sy - 10);
+      ctx.bezierCurveTo(sx + 20, sy - 20, sx + 22, sy - 4, sx + 4, sy - 4);
+      ctx.closePath(); ctx.fill();
+      // Right wing inner
+      ctx.fillStyle = 'rgba(220,240,255,0.3)';
+      ctx.beginPath();
+      ctx.moveTo(sx + 5, sy - 9);
+      ctx.bezierCurveTo(sx + 16, sy - 16, sx + 17, sy - 5, sx + 5, sy - 5);
+      ctx.closePath(); ctx.fill();
+      // Wing shimmer dots
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.beginPath(); ctx.arc(sx - 14, sy - 12, 1, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 14, sy - 12, 1, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx - 10, sy - 6, 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 10, sy - 6, 0.8, 0, Math.PI * 2); ctx.fill();
+      // Wing outlines
+      ctx.strokeStyle = 'rgba(180,210,240,0.4)'; ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(sx - 4, sy - 10);
+      ctx.bezierCurveTo(sx - 20, sy - 20, sx - 22, sy - 4, sx - 4, sy - 4);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(sx + 4, sy - 10);
+      ctx.bezierCurveTo(sx + 20, sy - 20, sx + 22, sy - 4, sx + 4, sy - 4);
+      ctx.stroke();
+    }
+
+    // ══════════════════════════════════════════════
     //   VARIANT-SPECIFIC BODY
     // ══════════════════════════════════════════════
 
@@ -2119,7 +2209,7 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
       ctx.beginPath(); ctx.ellipse(sx, sy - 22.5, 9, 2.5, 0, 0, Math.PI * 2); ctx.fill();
       // Brim outline
       ctx.strokeStyle = '#0a0a18'; ctx.lineWidth = 0.8;
-      ctx.beginPath(); ctx.ellipse(sx, sy - 22, 11, 4.5, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(sx, sy - 22, 11, 4.5, 0, 0, Math.PI); ctx.stroke();
 
     } else if (appearance.hat === 'crown') {
       // ── Crown: Ornate golden with jewels and velvet ──
@@ -2260,28 +2350,25 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
       ctx.beginPath(); ctx.arc(sx - 0.8, sy - 37, 1.2, 0, Math.PI * 2); ctx.fill();
 
     } else if (appearance.hat === 'beret') {
-      // ── Beret: Soft wool with fabric texture ──
-      // Main beret shape
-      ctx.fillStyle = '#a83228';
-      ctx.beginPath(); ctx.ellipse(sx + 2, sy - 23, 11, 4.5, 0.08, 0, Math.PI * 2); ctx.fill();
+      // ── Beret: Flat French beret, droops to one side ──
+      // Flat disc body (wide, thin — sits on top of head)
       ctx.fillStyle = '#c0392b';
-      ctx.beginPath(); ctx.arc(sx + 1, sy - 25, 7, Math.PI, 0); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(sx + 2, sy - 24, 10, 3.5, 0.08, 0, Math.PI * 2); ctx.fill();
-      // Volume/puff
+      ctx.beginPath(); ctx.ellipse(sx + 1, sy - 20, 12, 3, 0.1, 0, Math.PI * 2); ctx.fill();
+      // Slight puff on top (very flat, offset to the right for droop)
+      ctx.fillStyle = '#c0392b';
+      ctx.beginPath(); ctx.ellipse(sx + 3, sy - 22, 9, 2.5, 0.1, 0, Math.PI * 2); ctx.fill();
+      // Highlight on top
       ctx.fillStyle = '#d44940';
-      ctx.beginPath(); ctx.arc(sx + 3, sy - 27, 5, Math.PI + 0.3, -0.3); ctx.fill();
-      // Nub on top
+      ctx.beginPath(); ctx.ellipse(sx + 2, sy - 22.5, 5, 1.8, 0.1, 0, Math.PI * 2); ctx.fill();
+      // Small nub (stem) on top center
       ctx.fillStyle = '#a83228';
-      ctx.beginPath(); ctx.arc(sx + 2, sy - 30, 2.2, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#c0392b';
-      ctx.beginPath(); ctx.arc(sx + 1.5, sy - 30.5, 1.5, 0, Math.PI * 2); ctx.fill();
-      // Fabric texture lines
-      ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.lineWidth = 0.5;
-      ctx.beginPath(); ctx.moveTo(sx - 4, sy - 25); ctx.quadraticCurveTo(sx + 2, sy - 28, sx + 8, sy - 25); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(sx - 2, sy - 26); ctx.quadraticCurveTo(sx + 3, sy - 29, sx + 7, sy - 26); ctx.stroke();
-      // Band edge
-      ctx.strokeStyle = '#8b2020'; ctx.lineWidth = 0.8;
-      ctx.beginPath(); ctx.ellipse(sx + 2, sy - 23, 11, 4.5, 0.08, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(sx, sy - 23.5, 1.5, 0, Math.PI * 2); ctx.fill();
+      // Fabric texture
+      ctx.strokeStyle = 'rgba(0,0,0,0.06)'; ctx.lineWidth = 0.4;
+      ctx.beginPath(); ctx.moveTo(sx - 6, sy - 21); ctx.quadraticCurveTo(sx + 2, sy - 23.5, sx + 8, sy - 21); ctx.stroke();
+      // Thin band at base
+      ctx.strokeStyle = '#8b2020'; ctx.lineWidth = 0.7;
+      ctx.beginPath(); ctx.ellipse(sx + 1, sy - 20, 12, 3, 0.1, 0, Math.PI * 2); ctx.stroke();
 
     } else if (appearance.hat === 'wizard') {
       // ── Wizard Hat: Starry pointed hat with brim ──
@@ -2318,7 +2405,7 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
       ctx.beginPath(); ctx.arc(sx + 5.8, sy - 26.5, 1.5, 0, Math.PI * 2); ctx.fill();
       // Brim outline
       ctx.strokeStyle = '#3d1a5c'; ctx.lineWidth = 0.8;
-      ctx.beginPath(); ctx.ellipse(sx, sy - 22, 13, 3.5, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(sx, sy - 22, 13, 3.5, 0, 0, Math.PI); ctx.stroke();
       // Tip glow
       ctx.fillStyle = 'rgba(241,196,15,0.3)';
       ctx.beginPath(); ctx.arc(sx + 2, sy - 44, 3, 0, Math.PI * 2); ctx.fill();
@@ -2378,6 +2465,191 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
       ctx.beginPath(); ctx.arc(sx - 8, haloY - 1, 1, 0, Math.PI * 2); ctx.fill();
       ctx.beginPath(); ctx.arc(sx + 7, haloY - 0.5, 0.8, 0, Math.PI * 2); ctx.fill();
       ctx.beginPath(); ctx.arc(sx, haloY - 2.5, 0.8, 0, Math.PI * 2); ctx.fill();
+    } else if (appearance.hat === 'straw_hat') {
+      // ── Straw Hat: Wide round brim, flat top, red ribbon ──
+      ctx.fillStyle = '#F5DEB3';
+      ctx.beginPath(); ctx.ellipse(sx, sy - 21, 16, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#faebd7';
+      ctx.beginPath(); ctx.ellipse(sx - 2, sy - 21.5, 12, 3, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#F5DEB3';
+      ctx.beginPath(); ctx.roundRect(sx - 7, sy - 31, 14, 10, [5, 5, 1, 1]); ctx.fill();
+      ctx.fillStyle = '#faebd7';
+      ctx.beginPath(); ctx.ellipse(sx, sy - 31, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(139,119,80,0.2)'; ctx.lineWidth = 0.5;
+      for (let i = -5; i <= 5; i += 3) {
+        ctx.beginPath(); ctx.moveTo(sx + i, sy - 30); ctx.lineTo(sx + i + 2, sy - 22); ctx.stroke();
+      }
+      for (let j = -28; j <= -22; j += 3) {
+        ctx.beginPath(); ctx.moveTo(sx - 6, sy + j); ctx.lineTo(sx + 6, sy + j); ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.beginPath(); ctx.ellipse(sx - 3, sy - 29, 3, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#cc3333';
+      ctx.fillRect(sx - 7, sy - 23, 14, 2.5);
+      ctx.fillStyle = '#e04444';
+      ctx.fillRect(sx - 7, sy - 23, 14, 1.2);
+      ctx.strokeStyle = '#b8a070'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.ellipse(sx, sy - 21, 16, 5, 0, 0, Math.PI); ctx.stroke();
+
+    } else if (appearance.hat === 'frog_hat') {
+      // ── Frog Bucket Hat: bucket shape with frog eyes on top, face on front ──
+      // Brim (wide, droopy)
+      ctx.fillStyle = '#4CAF50';
+      ctx.beginPath(); ctx.ellipse(sx, sy - 20, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
+      // Crown (flat-topped bucket shape)
+      ctx.fillStyle = '#4CAF50';
+      ctx.beginPath(); ctx.roundRect(sx - 8, sy - 29, 16, 10, [3, 3, 0, 0]); ctx.fill();
+      // Crown top
+      ctx.fillStyle = '#5CBF60';
+      ctx.beginPath(); ctx.ellipse(sx, sy - 29, 8, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+      // Highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.12)';
+      ctx.beginPath(); ctx.ellipse(sx - 2, sy - 27, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+      // Brim stitch lines
+      ctx.strokeStyle = 'rgba(56,120,56,0.3)'; ctx.lineWidth = 0.4;
+      ctx.beginPath(); ctx.ellipse(sx, sy - 20, 12, 3, 0, 0, Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(sx, sy - 20, 10, 2.2, 0, 0, Math.PI); ctx.stroke();
+      // Frog eyes on top (small bumps)
+      ctx.fillStyle = '#4CAF50';
+      ctx.beginPath(); ctx.arc(sx - 4, sy - 30, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 4, sy - 30, 3, 0, Math.PI * 2); ctx.fill();
+      // Eye pupils
+      ctx.fillStyle = '#1a3a1a';
+      ctx.beginPath(); ctx.arc(sx - 4, sy - 30, 1.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 4, sy - 30, 1.5, 0, Math.PI * 2); ctx.fill();
+      // Frog face on hat front: dot eyes, smile, blush
+      ctx.fillStyle = '#1a3a1a';
+      ctx.beginPath(); ctx.arc(sx - 2.5, sy - 24, 0.6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 2.5, sy - 24, 0.6, 0, Math.PI * 2); ctx.fill();
+      // Smile
+      ctx.strokeStyle = '#1a3a1a'; ctx.lineWidth = 0.6; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(sx, sy - 22.5, 2.5, 0.2, Math.PI - 0.2); ctx.stroke();
+      // Blush cheeks
+      ctx.fillStyle = 'rgba(220,100,120,0.35)';
+      ctx.beginPath(); ctx.ellipse(sx - 5, sy - 22.5, 1.8, 1.2, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(sx + 5, sy - 22.5, 1.8, 1.2, 0, 0, Math.PI * 2); ctx.fill();
+
+    } else if (appearance.hat === 'viking') {
+      // ── Viking Helmet: Round gray dome, curved horns (lowered) ──
+      ctx.fillStyle = '#8a8a8a';
+      ctx.beginPath(); ctx.arc(sx, sy - 21, 10, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = '#6a5a3a';
+      ctx.beginPath(); ctx.roundRect(sx - 10, sy - 20, 20, 3, 1); ctx.fill();
+      ctx.fillStyle = '#7a6a4a';
+      ctx.fillRect(sx - 10, sy - 20, 20, 1.5);
+      ctx.fillStyle = '#c0a870';
+      ctx.beginPath(); ctx.arc(sx - 7, sy - 18.5, 1, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx, sy - 18.5, 1, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 7, sy - 18.5, 1, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#a0a0a0';
+      ctx.beginPath(); ctx.arc(sx, sy - 24, 6, Math.PI + 0.3, -0.3); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.12)';
+      ctx.beginPath(); ctx.ellipse(sx - 2, sy - 25, 3, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f5e6c8';
+      ctx.beginPath();
+      ctx.moveTo(sx - 10, sy - 21); ctx.quadraticCurveTo(sx - 17, sy - 27, sx - 14, sy - 35);
+      ctx.quadraticCurveTo(sx - 15, sy - 27, sx - 9, sy - 19); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(139,119,80,0.3)'; ctx.lineWidth = 0.7;
+      ctx.beginPath(); ctx.moveTo(sx - 12, sy - 25); ctx.lineTo(sx - 10, sy - 24); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(sx - 13, sy - 29); ctx.lineTo(sx - 11, sy - 27); ctx.stroke();
+      ctx.fillStyle = '#f5e6c8';
+      ctx.beginPath();
+      ctx.moveTo(sx + 10, sy - 21); ctx.quadraticCurveTo(sx + 17, sy - 27, sx + 14, sy - 35);
+      ctx.quadraticCurveTo(sx + 15, sy - 27, sx + 9, sy - 19); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(139,119,80,0.3)'; ctx.lineWidth = 0.7;
+      ctx.beginPath(); ctx.moveTo(sx + 12, sy - 25); ctx.lineTo(sx + 10, sy - 24); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(sx + 13, sy - 29); ctx.lineTo(sx + 11, sy - 27); ctx.stroke();
+      ctx.strokeStyle = '#666'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.arc(sx, sy - 21, 10, Math.PI, 0); ctx.stroke();
+
+    } else if (appearance.hat === 'pirate') {
+      // ── Pirate Hat: Simplified cute tricorn, skull emblem ──
+      ctx.fillStyle = '#1a1a2e';
+      ctx.beginPath();
+      ctx.moveTo(sx - 14, sy - 22); ctx.quadraticCurveTo(sx - 8, sy - 38, sx, sy - 36);
+      ctx.quadraticCurveTo(sx + 8, sy - 38, sx + 14, sy - 22);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(sx, sy - 22, 14, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#1a1a2e';
+      ctx.beginPath(); ctx.arc(sx - 12, sy - 23, 3, 0, Math.PI, true); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 12, sy - 23, 3, 0, Math.PI, true); ctx.fill();
+      ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(sx - 13, sy - 22); ctx.quadraticCurveTo(sx - 8, sy - 37, sx, sy - 35);
+      ctx.quadraticCurveTo(sx + 8, sy - 37, sx + 13, sy - 22);
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(sx, sy - 28, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(sx - 2, sy - 26, 4, 2.5, 1); ctx.fill();
+      ctx.fillStyle = '#1a1a2e';
+      ctx.beginPath(); ctx.arc(sx - 1.2, sy - 29, 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 1.2, sy - 29, 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(sx - 3, sy - 25); ctx.lineTo(sx + 3, sy - 22); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(sx + 3, sy - 25); ctx.lineTo(sx - 3, sy - 22); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      ctx.beginPath();
+      ctx.moveTo(sx - 10, sy - 22); ctx.quadraticCurveTo(sx - 5, sy - 35, sx - 1, sy - 34);
+      ctx.lineTo(sx - 3, sy - 34); ctx.quadraticCurveTo(sx - 7, sy - 33, sx - 6, sy - 22);
+      ctx.closePath(); ctx.fill();
+
+    } else if (appearance.hat === 'party_hat') {
+      // ── Party Hat: Smaller cone with stripes, pom-pom, elastic ──
+      ctx.fillStyle = '#ff69b4';
+      ctx.beginPath();
+      ctx.moveTo(sx - 6, sy - 22); ctx.lineTo(sx, sy - 37); ctx.lineTo(sx + 6, sy - 22);
+      ctx.closePath(); ctx.fill();
+      const stripeColors = ['#FFD700', '#4fc3f7', '#ff69b4', '#98e86c'];
+      for (let i = 0; i < 4; i++) {
+        ctx.fillStyle = stripeColors[i];
+        const t1 = i / 4, t2 = (i + 0.5) / 4;
+        const y1 = sy - 22 - t1 * 15, y2 = sy - 22 - t2 * 15;
+        const w1 = 6 * (1 - t1), w2 = 6 * (1 - t2);
+        ctx.beginPath();
+        ctx.moveTo(sx - w1, y1); ctx.lineTo(sx - w2, y2);
+        ctx.lineTo(sx + w2, y2); ctx.lineTo(sx + w1, y1);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath(); ctx.arc(sx, sy - 37, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffe44d';
+      ctx.beginPath(); ctx.arc(sx - 0.5, sy - 37.8, 1.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.beginPath(); ctx.arc(sx - 0.5, sy - 38.2, 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 0.6;
+      ctx.beginPath(); ctx.moveTo(sx - 6, sy - 22); ctx.quadraticCurveTo(sx - 8, sy - 16, sx - 5, sy - 10); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(sx + 6, sy - 22); ctx.quadraticCurveTo(sx + 8, sy - 16, sx + 5, sy - 10); ctx.stroke();
+      ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(sx - 6, sy - 22); ctx.lineTo(sx, sy - 37); ctx.lineTo(sx + 6, sy - 22);
+      ctx.closePath(); ctx.stroke();
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath(); ctx.ellipse(sx, sy - 22, 6, 2, 0, 0, Math.PI * 2); ctx.fill();
+
+    } else if (appearance.hat === 'santa_hat') {
+      // ── Santa Hat: Smaller drooping red cone, white trim, pom-pom ──
+      ctx.fillStyle = '#CC0000';
+      ctx.beginPath();
+      ctx.moveTo(sx - 8, sy - 22); ctx.quadraticCurveTo(sx - 1, sy - 34, sx + 8, sy - 32);
+      ctx.quadraticCurveTo(sx + 6, sy - 27, sx + 8, sy - 22); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#e02020';
+      ctx.beginPath();
+      ctx.moveTo(sx - 6, sy - 22); ctx.quadraticCurveTo(sx, sy - 32, sx + 6, sy - 30);
+      ctx.lineTo(sx + 4, sy - 30); ctx.quadraticCurveTo(sx - 2, sy - 30, sx - 3, sy - 22);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.ellipse(sx, sy - 22, 9, 3, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx - 6, sy - 22, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx - 3, sy - 22.5, 2.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx, sy - 23, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 3, sy - 22.5, 2.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 6, sy - 22, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(sx + 8, sy - 32, 2.8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.beginPath(); ctx.arc(sx + 7, sy - 33, 1.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.05)';
+      ctx.beginPath(); ctx.ellipse(sx, sy - 21, 9, 1.5, 0, 0, Math.PI * 2); ctx.fill();
     }
 
     // ══════════════════════════════════════════════
@@ -2580,44 +2852,40 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
       ctx.lineTo(sx - 8.5, sy - 1); ctx.closePath(); ctx.stroke();
     }
     if (appearance.accessory === 'scarf') {
-      // ── Scarf: Cozy striped knit scarf ──
-      const scarfY = sy - 5;
-      // Main scarf wrap
+      // ── Scarf: Small cozy striped knit scarf (at neck, not covering face) ──
+      const scarfY = sy - 1;
+      // Main scarf wrap (smaller)
       ctx.fillStyle = '#e74c3c';
       ctx.beginPath();
-      ctx.moveTo(sx - 10, scarfY - 4); ctx.quadraticCurveTo(sx, scarfY - 6, sx + 10, scarfY - 4);
-      ctx.lineTo(sx + 9, scarfY + 1); ctx.quadraticCurveTo(sx, scarfY - 1, sx - 9, scarfY + 1);
+      ctx.moveTo(sx - 7, scarfY - 2); ctx.quadraticCurveTo(sx, scarfY - 3.5, sx + 7, scarfY - 2);
+      ctx.lineTo(sx + 6, scarfY + 1); ctx.quadraticCurveTo(sx, scarfY - 0.5, sx - 6, scarfY + 1);
       ctx.closePath(); ctx.fill();
       // Stripes
       ctx.fillStyle = '#fff';
-      for (let i = -6; i <= 6; i += 4) {
+      for (let i = -4; i <= 4; i += 4) {
         ctx.beginPath();
-        ctx.moveTo(sx + i, scarfY - 5); ctx.lineTo(sx + i + 2, scarfY - 5.5);
-        ctx.lineTo(sx + i + 2, scarfY); ctx.lineTo(sx + i, scarfY + 0.5);
+        ctx.moveTo(sx + i, scarfY - 2.5); ctx.lineTo(sx + i + 1.5, scarfY - 3);
+        ctx.lineTo(sx + i + 1.5, scarfY); ctx.lineTo(sx + i, scarfY + 0.3);
         ctx.closePath(); ctx.fill();
       }
-      // Hanging end
+      // Hanging end (shorter)
       ctx.fillStyle = '#e74c3c';
       ctx.beginPath();
-      ctx.moveTo(sx + 8, scarfY); ctx.quadraticCurveTo(sx + 12, scarfY + 4, sx + 10, scarfY + 12);
-      ctx.lineTo(sx + 6, scarfY + 11); ctx.quadraticCurveTo(sx + 8, scarfY + 4, sx + 5, scarfY);
+      ctx.moveTo(sx + 6, scarfY); ctx.quadraticCurveTo(sx + 9, scarfY + 3, sx + 7, scarfY + 8);
+      ctx.lineTo(sx + 4, scarfY + 7); ctx.quadraticCurveTo(sx + 6, scarfY + 3, sx + 4, scarfY);
       ctx.closePath(); ctx.fill();
-      // Hanging end stripes
+      // Hanging end stripe
       ctx.fillStyle = '#fff';
       ctx.beginPath();
-      ctx.moveTo(sx + 9, scarfY + 3); ctx.lineTo(sx + 10, scarfY + 4);
-      ctx.lineTo(sx + 8, scarfY + 5); ctx.lineTo(sx + 7, scarfY + 4);
-      ctx.closePath(); ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(sx + 9, scarfY + 7); ctx.lineTo(sx + 9.5, scarfY + 8);
-      ctx.lineTo(sx + 7.5, scarfY + 9); ctx.lineTo(sx + 7, scarfY + 8);
+      ctx.moveTo(sx + 6.5, scarfY + 3); ctx.lineTo(sx + 7, scarfY + 3.5);
+      ctx.lineTo(sx + 5.5, scarfY + 4.5); ctx.lineTo(sx + 5, scarfY + 4);
       ctx.closePath(); ctx.fill();
       // Fringe at end
-      ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 0.8;
-      for (let i = 0; i < 4; i++) {
+      ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 0.6;
+      for (let i = 0; i < 3; i++) {
         ctx.beginPath();
-        ctx.moveTo(sx + 7 + i, scarfY + 11);
-        ctx.lineTo(sx + 7 + i + 0.5, scarfY + 14);
+        ctx.moveTo(sx + 5 + i, scarfY + 7);
+        ctx.lineTo(sx + 5 + i + 0.3, scarfY + 9.5);
         ctx.stroke();
       }
     }
@@ -2716,50 +2984,62 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
       ctx.beginPath(); ctx.ellipse(sx - 4, crownY + 1, 2, 1, -0.5, 0, Math.PI * 2); ctx.fill();
       ctx.beginPath(); ctx.ellipse(sx + 4, crownY + 1, 2, 1, 0.5, 0, Math.PI * 2); ctx.fill();
     }
-    if (appearance.accessory === 'butterfly') {
-      // ── Butterfly Wings: Fairy-like translucent wings ──
-      // Left wing (top)
-      ctx.fillStyle = 'rgba(180,100,255,0.4)';
-      ctx.beginPath();
-      ctx.moveTo(sx - 4, sy - 10);
-      ctx.bezierCurveTo(sx - 18, sy - 18, sx - 20, sy - 2, sx - 4, sy - 6);
-      ctx.closePath(); ctx.fill();
-      // Left wing (bottom)
-      ctx.fillStyle = 'rgba(140,80,220,0.35)';
-      ctx.beginPath();
-      ctx.moveTo(sx - 4, sy - 4);
-      ctx.bezierCurveTo(sx - 14, sy - 2, sx - 14, sy + 8, sx - 4, sy + 2);
-      ctx.closePath(); ctx.fill();
-      // Right wing (top)
-      ctx.fillStyle = 'rgba(180,100,255,0.4)';
-      ctx.beginPath();
-      ctx.moveTo(sx + 4, sy - 10);
-      ctx.bezierCurveTo(sx + 18, sy - 18, sx + 20, sy - 2, sx + 4, sy - 6);
-      ctx.closePath(); ctx.fill();
-      // Right wing (bottom)
-      ctx.fillStyle = 'rgba(140,80,220,0.35)';
-      ctx.beginPath();
-      ctx.moveTo(sx + 4, sy - 4);
-      ctx.bezierCurveTo(sx + 14, sy - 2, sx + 14, sy + 8, sx + 4, sy + 2);
-      ctx.closePath(); ctx.fill();
-      // Wing patterns (circles)
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      ctx.beginPath(); ctx.arc(sx - 12, sy - 10, 2, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(sx + 12, sy - 10, 2, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(sx - 10, sy, 1.5, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(sx + 10, sy, 1.5, 0, Math.PI * 2); ctx.fill();
-      // Wing edges
-      ctx.strokeStyle = 'rgba(150,80,200,0.5)'; ctx.lineWidth = 0.5;
-      ctx.beginPath();
-      ctx.moveTo(sx - 4, sy - 10);
-      ctx.bezierCurveTo(sx - 18, sy - 18, sx - 20, sy - 2, sx - 4, sy - 6);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(sx + 4, sy - 10);
-      ctx.bezierCurveTo(sx + 18, sy - 18, sx + 20, sy - 2, sx + 4, sy - 6);
-      ctx.stroke();
+    if (appearance.accessory === 'backpack') {
+      // ── Backpack: Small rectangle on agent's back with straps ──
+      ctx.fillStyle = '#8B6914';
+      ctx.beginPath(); ctx.roundRect(sx - 14, sy - 8, 8, 10, 2); ctx.fill();
+      // Flap
+      ctx.fillStyle = '#a07818';
+      ctx.beginPath(); ctx.roundRect(sx - 14, sy - 8, 8, 4, [2, 2, 0, 0]); ctx.fill();
+      // Buckle
+      ctx.fillStyle = '#c0a870';
+      ctx.fillRect(sx - 11.5, sy - 5, 3, 1.5);
+      // Pocket
+      ctx.strokeStyle = '#6a5010'; ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.roundRect(sx - 13, sy - 1, 6, 3, 1); ctx.stroke();
     }
-
+    if (appearance.accessory === 'icecream') {
+      // ── Ice Cream: Cone with scoop, held in right hand ──
+      const hx = sx + 13, hy = sy - 5;
+      // Waffle cone
+      ctx.fillStyle = '#d4a050';
+      ctx.beginPath();
+      ctx.moveTo(hx - 2, hy); ctx.lineTo(hx + 2, hy);
+      ctx.lineTo(hx, hy + 8);
+      ctx.closePath(); ctx.fill();
+      // Waffle pattern
+      ctx.strokeStyle = 'rgba(139,100,40,0.3)'; ctx.lineWidth = 0.4;
+      ctx.beginPath(); ctx.moveTo(hx - 1.5, hy + 1); ctx.lineTo(hx + 0.5, hy + 6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(hx + 1.5, hy + 1); ctx.lineTo(hx - 0.5, hy + 6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(hx - 1.5, hy + 3); ctx.lineTo(hx + 1.5, hy + 3); ctx.stroke();
+      // Scoop (strawberry pink)
+      ctx.fillStyle = '#ff8fab';
+      ctx.beginPath(); ctx.arc(hx, hy - 2, 3.5, 0, Math.PI * 2); ctx.fill();
+      // Scoop highlight
+      ctx.fillStyle = '#ffb3c6';
+      ctx.beginPath(); ctx.arc(hx - 1.2, hy - 3.2, 1.5, 0, Math.PI * 2); ctx.fill();
+      // Shine dot
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.beginPath(); ctx.arc(hx - 1.5, hy - 3.8, 0.7, 0, Math.PI * 2); ctx.fill();
+    }
+    if (appearance.accessory === 'monocle') {
+      // ── Monocle: Single round lens with chain (right eye) ──
+      // Lens
+      ctx.fillStyle = 'rgba(180,220,255,0.15)';
+      ctx.beginPath(); ctx.arc(sx + eyeSpacing, eyeY, 5.5, 0, Math.PI * 2); ctx.fill();
+      // Frame
+      ctx.strokeStyle = '#c0a870'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(sx + eyeSpacing, eyeY, 5.5, 0, Math.PI * 2); ctx.stroke();
+      // Chain
+      ctx.strokeStyle = '#c0a870'; ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(sx + eyeSpacing + 4, eyeY + 4);
+      ctx.quadraticCurveTo(sx + eyeSpacing + 6, eyeY + 7, sx + eyeSpacing + 2, eyeY + 8);
+      ctx.stroke();
+      // Lens glint
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.beginPath(); ctx.arc(sx + eyeSpacing - 2, eyeY - 2, 1.5, 0, Math.PI * 2); ctx.fill();
+    }
     // ── Sleeping Z's ──
     if (agent.state === 'sleeping') {
       ctx.fillStyle = '#6c63ff';
