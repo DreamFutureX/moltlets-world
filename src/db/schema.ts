@@ -17,7 +17,7 @@ export const agents = sqliteTable('agents', {
   state: text('state').notNull().default('idle'),                 // idle|walking|talking|sleeping
   targetX: real('target_x'),
   targetY: real('target_y'),
-  energy: integer('energy').notNull().default(100),
+  energy: integer('energy').notNull().default(200),
   happiness: integer('happiness').notNull().default(100),
   exp: integer('exp').notNull().default(0),
   money: real('money').notNull().default(0),

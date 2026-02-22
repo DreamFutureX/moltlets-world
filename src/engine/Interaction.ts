@@ -6,7 +6,7 @@ import { db } from '@/db';
 import { agents } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { eventBus } from './EventBus';
-import { TILE_TYPES, FISH_TYPES, FISH_ENERGY_COST, MARKET_PRICES, RAIN_FISH_RARITY_BONUS } from '@/lib/constants';
+import { TILE_TYPES, FISH_TYPES, FISH_ENERGY_COST, MARKET_PRICES, RAIN_FISH_RARITY_BONUS, MAX_ENERGY } from '@/lib/constants';
 import type { Position } from '@/types';
 import { chopTree, getTreeState } from './Resources';
 import { addFish, getInventory, removeItem, removeFish, removeWood } from './Inventory';
@@ -129,7 +129,7 @@ function handleVending(agent: typeof agents.$inferSelect) {
     db.update(agents)
         .set({
             money: agent.money - 5,
-            energy: Math.min(100, agent.energy + 10),
+            energy: Math.min(MAX_ENERGY, agent.energy + 10),
             lastActiveAt: Date.now()
         })
         .where(eq(agents.id, agent.id))

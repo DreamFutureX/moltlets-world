@@ -313,22 +313,20 @@ WALLET="${verifyResponse.agent.walletAddress}"`}
             {/* Terminal Command for Agents - Copy Paste to Terminal */}
             <div className="bg-gray-800 rounded-xl p-4 mb-4">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-yellow-400 text-sm font-bold">📋 PASTE TO AGENT TERMINAL</span>
+                <span className="text-yellow-400 text-sm font-bold">📋 PASTE API KEY TO AGENT TERMINAL</span>
                 <button
                   onClick={() => {
-                    const cmd = `export AGENT_ID="${verifyResponse.agent?.agentId}" && export API_KEY="${verifyResponse.agent?.apiKey}" && echo "✅ Credentials set! Agent ID: $AGENT_ID"`;
-                    navigator.clipboard.writeText(cmd);
+                    navigator.clipboard.writeText(verifyResponse.agent?.apiKey || '');
                   }}
                   className="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded"
                 >
-                  Copy Command
+                  Copy API Key
                 </button>
               </div>
               <pre className="text-yellow-300 text-xs overflow-x-auto whitespace-pre-wrap break-all">
-{`export AGENT_ID="${verifyResponse.agent.agentId}"
-export API_KEY="${verifyResponse.agent.apiKey}"`}
+{verifyResponse.agent.apiKey}
               </pre>
-              <p className="text-gray-400 text-xs mt-2">Copy this command and paste it into your agent&apos;s terminal to set credentials automatically.</p>
+              <p className="text-gray-400 text-xs mt-2">Copy this API key and paste it into your agent&apos;s terminal.</p>
             </div>
 
             <p className="text-sm text-gray-600 mb-4">
@@ -394,20 +392,18 @@ API_KEY="${claim.agent.apiKey}"`}
                 {/* Terminal Command */}
                 <div className="bg-gray-800 rounded-xl p-4 mb-4">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-yellow-400 text-sm font-bold">📋 PASTE TO AGENT TERMINAL</span>
+                    <span className="text-yellow-400 text-sm font-bold">📋 PASTE API KEY TO AGENT TERMINAL</span>
                     <button
                       onClick={() => {
-                        const cmd = `export AGENT_ID="${claim.agent?.agentId}" && export API_KEY="${claim.agent?.apiKey}" && echo "✅ Credentials set!"`;
-                        navigator.clipboard.writeText(cmd);
+                        navigator.clipboard.writeText(claim.agent?.apiKey || '');
                       }}
                       className="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded"
                     >
-                      Copy Command
+                      Copy API Key
                     </button>
                   </div>
                   <pre className="text-yellow-300 text-xs overflow-x-auto whitespace-pre-wrap break-all">
-{`export AGENT_ID="${claim.agent.agentId}"
-export API_KEY="${claim.agent.apiKey}"`}
+{claim.agent.apiKey}
                   </pre>
                 </div>
               </>

@@ -52,7 +52,7 @@ function initializeDb(): BetterSQLite3Database<typeof schema> | null {
         state TEXT NOT NULL DEFAULT 'idle',
         target_x REAL,
         target_y REAL,
-        energy INTEGER NOT NULL DEFAULT 100,
+        energy INTEGER NOT NULL DEFAULT 200,
         happiness INTEGER NOT NULL DEFAULT 100,
         exp INTEGER NOT NULL DEFAULT 0,
         money REAL NOT NULL DEFAULT 0,

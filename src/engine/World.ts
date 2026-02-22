@@ -18,6 +18,7 @@ import {
   MAX_AGENTS,
   DEFAULT_COLORS,
   TILE_TYPES,
+  MAX_ENERGY,
 } from '@/lib/constants';
 import type { AgentData, Position, AgentAppearance, MapData, Direction } from '@/types';
 import { registerInteractable, handleInteraction, type InteractionType } from './Interaction';
@@ -543,7 +544,7 @@ class World {
       posX: position.x,
       posY: position.y,
       state: 'idle',
-      energy: 100,
+      energy: MAX_ENERGY,
       happiness: 100,
       exp: 0,
       money: 0,

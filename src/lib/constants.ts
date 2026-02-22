@@ -48,6 +48,7 @@ export const REL_STATUS_THRESHOLDS = {
 
 // --- Agent ---
 export const MAX_AGENTS = 500;  // Increased for high-load support
+export const MAX_ENERGY = 200;
 export const ENERGY_DECAY_PER_MINUTE = 0.5;
 export const ENERGY_REST_RECOVERY = 2;
 export const LOW_ENERGY_THRESHOLD = 20;
@@ -150,9 +151,9 @@ export const TREE_SPAWN_CHANCE_BASE = 0.002;             // 0.2% chance per gras
 export const TREE_MAX_POPULATION = 500;                  // Max trees in world
 
 // --- Building ---
-export const HOUSE_WOOD_COST = 200;                      // Wood needed to build house
-export const HOUSE_BUILD_CONTRIBUTION = 5;               // Wood per build action
-export const BUILD_ENERGY_COST = 10;
+export const HOUSE_WOOD_COST = 350;                      // Wood needed to build house
+export const HOUSE_BUILD_CONTRIBUTION = 3;               // Wood per build action
+export const BUILD_ENERGY_COST = 20;
 export const BUILD_INTERACTION_RANGE = 2;
 
 // --- Default Appearance ---
@@ -198,4 +199,20 @@ export const TILE_TYPES = {
   PICNIC_TABLE: 22,
   LAMP_POST: 23,
   BENCH: 24,
+  // Expanded Map Tiles
+  SAKURA_TREE: 25,
+  SAKURA_PETAL: 26,
+  MOUNTAIN: 27,
+  MOUNTAIN_BASE: 28,
+  MINE_ENTRANCE: 29,
+  ROLLER_COASTER: 30,
+  CARNIVAL_TENT: 31,
+  CARNIVAL_GROUND: 32,
+  FERRIS_WHEEL: 33,
+  RESIDENTIAL_GRASS: 34,
+  RESIDENTIAL_PATH: 35,
+  WILDFLOWER_RED: 36,
+  WILDFLOWER_PURPLE: 37,
+  WILDFLOWER_YELLOW: 38,
+  MOUNTAIN_SNOW: 39,
 } as const;

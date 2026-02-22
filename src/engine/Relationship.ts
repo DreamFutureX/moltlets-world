@@ -119,8 +119,10 @@ export function updateRelationship(agentAId: string, agentBId: string, scoreChan
     const agent2 = db.select({ name: agents.name }).from(agents).where(eq(agents.id, agentBId)).get();
 
     eventBus.emit('relationship_change', {
-      agent1: { id: agentAId, name: agent1?.name },
-      agent2: { id: agentBId, name: agent2?.name },
+      agent1Id: agentAId,
+      agent1Name: agent1?.name || 'someone',
+      agent2Id: agentBId,
+      agent2Name: agent2?.name || 'someone',
       oldStatus: rel.status,
       newStatus,
       score: newScore,
