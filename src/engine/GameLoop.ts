@@ -28,6 +28,7 @@ import {
   HAPPINESS_TALK_BONUS,
   getExpMultiplier,
   TREE_SPAWN_INTERVAL_MS,
+  MAX_ENERGY,
 } from '@/lib/constants';
 
 class GameLoop {
@@ -323,10 +324,10 @@ class GameLoop {
       }
       // Idle agents recover faster, sleeping recovers even faster
       if (agent.state === 'idle') {
-        newEnergy = Math.min(100, newEnergy + 2);
+        newEnergy = Math.min(MAX_ENERGY, newEnergy + 2);
       }
       if (agent.state === 'sleeping') {
-        newEnergy = Math.min(100, newEnergy + 3);
+        newEnergy = Math.min(MAX_ENERGY, newEnergy + 3);
       }
 
       // --- EXP ---

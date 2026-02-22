@@ -16,6 +16,7 @@ import {
   SPEECH_BUBBLE_DURATION_MS,
   EMOTE_DURATION_MS,
   FLOATING_TEXT_DURATION_MS,
+  MAX_ENERGY,
 } from '@/lib/constants';
 
 // ── Seeded random for consistent procedural detail ──
@@ -3052,7 +3053,7 @@ export default function GameCanvas({ onAgentClick, selectedAgentId, focusAgentId
     const barW = 20;
     const barY = sy - (hasEars || (appearance.hat && appearance.hat !== 'none') ? 46 : 28);
     ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.roundRect(sx - barW / 2, barY, barW, 3, 1.5); ctx.fill();
-    const er = agent.energy / 100;
+    const er = agent.energy / MAX_ENERGY;
     ctx.fillStyle = er > 0.5 ? '#4CAF50' : er > 0.2 ? '#FFC107' : '#f44336';
     ctx.beginPath(); ctx.roundRect(sx - barW / 2, barY, barW * er, 3, 1.5); ctx.fill();
 

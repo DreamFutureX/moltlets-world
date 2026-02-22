@@ -223,8 +223,10 @@ function buildDiaryForAgent(
     if (names.length === 1) {
       const depth = totalMsgs > 10 ? 'a long heart-to-heart' : totalMsgs > 5 ? 'a friendly chat' : 'a quick catch-up';
       sentences.push(`had ${depth} with ${names[0]}`);
-    } else {
+    } else if (names.length <= 3) {
       sentences.push(`hung out and chatted with ${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`);
+    } else {
+      sentences.push(`hung out and chatted with ${names.slice(0, 3).join(', ')} and ${names.length - 3} others`);
     }
   }
 

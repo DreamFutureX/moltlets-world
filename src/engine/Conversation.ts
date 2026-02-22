@@ -174,10 +174,10 @@ export function endConversation(conversationId: string): void {
     .all()
     .sort((a, b) => a.createdAt - b.createdAt);
 
-  if (allMessages.length > 0) {
-    const agent1 = db.select({ name: agents.name }).from(agents).where(eq(agents.id, convo.agent1Id)).get();
-    const agent2 = db.select({ name: agents.name }).from(agents).where(eq(agents.id, convo.agent2Id)).get();
+  const agent1 = db.select({ name: agents.name }).from(agents).where(eq(agents.id, convo.agent1Id)).get();
+  const agent2 = db.select({ name: agents.name }).from(agents).where(eq(agents.id, convo.agent2Id)).get();
 
+  if (allMessages.length > 0) {
     const summary = `${agent1?.name} and ${agent2?.name} had a conversation with ${allMessages.length} messages.`;
     db.update(conversations).set({ summary }).where(eq(conversations.id, conversationId)).run();
   }
@@ -186,6 +186,8 @@ export function endConversation(conversationId: string): void {
     conversationId,
     agent1Id: convo.agent1Id,
     agent2Id: convo.agent2Id,
+    agent1Name: agent1?.name || 'someone',
+    agent2Name: agent2?.name || 'someone',
     messageCount: allMessages.length,
   });
 }
