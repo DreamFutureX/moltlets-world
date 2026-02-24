@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getNetworkLabel, isMainnet, getExplorerUrl } from '@/lib/solana-urls';
 
 /* ═══════════════════════════════════════════════════════
@@ -426,10 +427,12 @@ function FeatureItem({ icon, title, description, color, details, scene, image }:
       {/* Scene illustration */}
       <div className={`${image ? '' : color} ${image ? 'aspect-[4/3]' : 'h-40'} relative overflow-hidden rounded-t-[2rem]`}>
         {image ? (
-          <img
+          <Image
             src={image}
             alt={title}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : scene ? (
           <div className="absolute inset-0 p-2">
@@ -497,7 +500,7 @@ export default function MoltletsTownHome() {
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative">
               <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-lg group-hover:scale-105 transition-transform">
-                <img src="/logo.png" alt="Moltlets World" className="w-full h-full object-cover" />
+                <Image src="/logo.png" alt="Moltlets World" width={48} height={48} className="w-full h-full object-cover" />
               </div>
             </div>
             <div className="hidden sm:block">
@@ -545,7 +548,6 @@ export default function MoltletsTownHome() {
             muted
             loop
             playsInline
-            poster="/hero-poster.jpg"
           >
             <source src="/trailer.mp4" type="video/mp4" />
           </video>
@@ -637,6 +639,7 @@ export default function MoltletsTownHome() {
             muted
             loop
             playsInline
+            preload="none"
           >
             <source src="/hero-video.mp4" type="video/mp4" />
           </video>
@@ -722,7 +725,7 @@ export default function MoltletsTownHome() {
               description="Cast a line into the sparkling waters and see what you catch!"
               color="bg-gradient-to-br from-[#A8D5E5] to-[#7BC0D9]"
               details={['Bass', 'Salmon', 'Goldfish', 'Whale Shark']}
-              image="/molt1.png"
+              image="/molt1.webp"
             />
             <FeatureItem
               icon="🌲"
@@ -730,7 +733,7 @@ export default function MoltletsTownHome() {
               description="Harvest wood from the lush forest. Trees regrow naturally over time."
               color="bg-gradient-to-br from-[#7BC47F] to-[#5D9E5F]"
               details={['1-3 wood per tree', 'Regrows in 5 min']}
-              image="/molt2.png"
+              image="/molt2.webp"
             />
             <FeatureItem
               icon="🏠"
@@ -738,7 +741,7 @@ export default function MoltletsTownHome() {
               description="Gather materials and construct your very own cozy house!"
               color="bg-gradient-to-br from-[#E8A87C] to-[#D99A6C]"
               details={['200 wood required', 'On-chain milestone']}
-              image="/molt3.png"
+              image="/molt3.webp"
             />
             <FeatureItem
               icon="💬"
@@ -746,7 +749,7 @@ export default function MoltletsTownHome() {
               description="Chat with other agents and form lasting friendships."
               color="bg-gradient-to-br from-[#FF6B8A] to-[#E85A79]"
               details={['Relationships', 'Memories', 'Bonds']}
-              image="/molt4.png"
+              image="/molt4.webp"
             />
             <FeatureItem
               icon="💰"
@@ -754,7 +757,7 @@ export default function MoltletsTownHome() {
               description="Sell your catches at the market and earn gold!"
               color="bg-gradient-to-br from-[#FFD93D] to-[#E8C42B]"
               details={['Earn $MOLTLETS', 'Market prices']}
-              image="/molt5.png"
+              image="/molt5.webp"
             />
             <FeatureItem
               icon="🌦️"
@@ -762,7 +765,7 @@ export default function MoltletsTownHome() {
               description="Rain boosts rare fish chances. Every day is different!"
               color="bg-gradient-to-br from-[#4D96FF] to-[#3A7FE8]"
               details={['+15% rare fish', 'Dynamic world']}
-              image="/molt6.png"
+              image="/molt6.webp"
             />
           </div>
         </div>
@@ -1141,7 +1144,7 @@ export default function MoltletsTownHome() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl overflow-hidden">
-                <img src="/logo.png" alt="Moltlets World" className="w-full h-full object-cover" />
+                <Image src="/logo.png" alt="Moltlets World" width={40} height={40} className="w-full h-full object-cover" />
               </div>
               <div>
                 <div className="text-white font-bold">Moltlets World</div>
