@@ -650,6 +650,9 @@ class World {
 
     if (this.map.obstacles[ty]?.[tx]) return false;
 
+    // Clear cached path so tickMovement() computes a fresh one
+    this.pathCache.delete(agentId);
+
     db.update(agents).set({
       targetX: tx,
       targetY: ty,
@@ -686,8 +689,12 @@ class World {
 
     if (walkingAgents.length === 0) return;
 
+    // Build occupied tile set for quick collision checks (no full A* needed)
     const allAgents = db.select().from(agents).all();
-    const agentPositions = allAgents.map(a => ({ x: Math.round(a.posX), y: Math.round(a.posY) }));
+    const occupiedTiles = new Set<string>();
+    for (const a of allAgents) {
+      occupiedTiles.add(`${Math.round(a.posX)},${Math.round(a.posY)}`);
+    }
 
     // Collect all DB updates, execute in one transaction
     const updates: (() => void)[] = [];
@@ -696,6 +703,7 @@ class World {
     for (const agent of walkingAgents) {
       if (agent.targetX === null || agent.targetY === null) {
         updates.push(() => db.update(agents).set({ state: 'idle' }).where(eq(agents.id, agent.id)).run());
+        this.pathCache.delete(agent.id);
         continue;
       }
 
@@ -719,33 +727,53 @@ class World {
           position: targetPos,
           state: 'idle',
         }));
+        this.pathCache.delete(agent.id);
         continue;
       }
 
-      // Find path from current rounded position
-      const otherPositions = agentPositions.filter(
-        p => !(p.x === currentPos.x && p.y === currentPos.y)
-      );
-      const path = findPath(
-        currentPos,
-        targetPos,
-        this.map.obstacles,
-        WORLD_WIDTH,
-        WORLD_HEIGHT,
-        otherPositions,
-      );
+      // Try to use cached path first (avoids expensive A* every tick)
+      let cachedPath = this.pathCache.get(agent.id);
+      if (cachedPath && cachedPath.length > 0) {
+        const nextStep = cachedPath[0];
+        const stepKey = `${nextStep.x},${nextStep.y}`;
+        // Check if next step is blocked by obstacle or another agent
+        if (this.map.obstacles[nextStep.y]?.[nextStep.x] || occupiedTiles.has(stepKey)) {
+          // Path blocked — clear cache, will recompute below
+          cachedPath = undefined;
+          this.pathCache.delete(agent.id);
+        }
+      }
 
-      if (path.length === 0) {
-        updates.push(() => db.update(agents).set({
-          state: 'idle',
-          targetX: null,
-          targetY: null,
-        }).where(eq(agents.id, agent.id)).run());
-        continue;
+      // Compute new path only if no cache
+      if (!cachedPath || cachedPath.length === 0) {
+        const otherPositions = allAgents
+          .filter(a => a.id !== agent.id)
+          .map(a => ({ x: Math.round(a.posX), y: Math.round(a.posY) }));
+        const path = findPath(
+          currentPos,
+          targetPos,
+          this.map.obstacles,
+          WORLD_WIDTH,
+          WORLD_HEIGHT,
+          otherPositions,
+        );
+
+        if (path.length === 0) {
+          updates.push(() => db.update(agents).set({
+            state: 'idle',
+            targetX: null,
+            targetY: null,
+          }).where(eq(agents.id, agent.id)).run());
+          this.pathCache.delete(agent.id);
+          continue;
+        }
+
+        cachedPath = path;
+        this.pathCache.set(agent.id, cachedPath);
       }
 
       // Move fractionally toward the next tile
-      const nextStep = path[0];
+      const nextStep = cachedPath[0];
       const dx = nextStep.x - agent.posX;
       const dy = nextStep.y - agent.posY;
       const dist = Math.sqrt(dx * dx + dy * dy);
@@ -754,6 +782,8 @@ class World {
       if (dist <= AGENT_SPEED) {
         newX = nextStep.x;
         newY = nextStep.y;
+        // Reached this waypoint, remove from cache
+        cachedPath.shift();
       } else {
         newX = agent.posX + (dx / dist) * AGENT_SPEED;
         newY = agent.posY + (dy / dist) * AGENT_SPEED;
