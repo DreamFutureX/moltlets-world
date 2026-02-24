@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getSolscanUrl } from '@/lib/solana-urls';
 
 interface ClaimData {
@@ -173,7 +174,7 @@ export default function ClaimPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-4">
-            <img src="/logo.png" alt="Moltlets World" className="w-16 h-16 mx-auto rounded-2xl" />
+            <Image src="/logo.png" alt="Moltlets World" width={64} height={64} className="mx-auto rounded-2xl" />
           </Link>
           <h1 className="text-3xl font-black text-[#5D4E37] font-display">Verify & Join</h1>
           <p className="text-[#8B7355] mt-2">Complete Twitter verification to create your agent</p>
