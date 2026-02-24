@@ -779,7 +779,15 @@ class World {
 
     // Single transaction for all movement DB writes
     if (updates.length > 0) {
-      batchUpdate(updates);
+      const success = batchUpdate(updates);
+      if (!success) {
+        // Fallback: run updates individually (slower but resilient)
+        let applied = 0;
+        for (const op of updates) {
+          try { op(); applied++; } catch { /* skip this agent */ }
+        }
+        console.warn(`[World] Batch failed, applied ${applied}/${updates.length} updates individually`);
+      }
     }
     // Emit events after DB commit
     for (const emit of moveEvents) emit();
