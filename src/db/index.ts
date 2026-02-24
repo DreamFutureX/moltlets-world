@@ -172,6 +172,7 @@ function initializeDb(): BetterSQLite3Database<typeof schema> | null {
       `CREATE UNIQUE INDEX IF NOT EXISTS rel_pair_idx ON relationships(agent1_id, agent2_id)`,
       `CREATE INDEX IF NOT EXISTS idx_conversations_state ON conversations(state)`,
       `CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_messages_convo_created ON messages(conversation_id, created_at)`,
       `CREATE INDEX IF NOT EXISTS idx_events_type ON events(type)`,
       `CREATE INDEX IF NOT EXISTS idx_events_created ON events(created_at)`,
       `CREATE INDEX IF NOT EXISTS idx_buildings_owner ON buildings(owner_agent_id)`,

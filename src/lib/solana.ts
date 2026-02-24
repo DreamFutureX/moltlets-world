@@ -107,6 +107,7 @@ const BATCH_INTERVAL = 5 * 60 * 1000; // 5 minutes - batch more to save gas
 const BATCH_SIZE = 50; // 50 activities per transaction - fewer txs = less gas
 const TX_TIMEOUT_MS = 30_000; // 30s timeout for sendAndConfirmTransaction
 const MAX_BATCH_RETRIES = 3; // Drop batch after this many consecutive failures
+const MAX_QUEUE_SIZE = 500; // Cap queue to prevent unbounded memory growth
 let consecutiveFailures = 0;
 
 // Treasury keypair for paying transaction fees
@@ -174,6 +175,13 @@ export function logActivity(
   // Check if logging is enabled
   if (!process.env.SOLANA_TREASURY_SECRET_KEY) {
     return; // Silent skip if no treasury configured
+  }
+
+  // Cap queue size to prevent unbounded memory growth
+  if (activityQueue.length >= MAX_QUEUE_SIZE) {
+    const dropped = activityQueue.length - MAX_QUEUE_SIZE + 1;
+    activityQueue.splice(0, dropped);
+    console.warn(`[Solana] Queue full (${MAX_QUEUE_SIZE}), dropped ${dropped} oldest activities`);
   }
 
   activityQueue.push({
@@ -266,8 +274,11 @@ async function flushActivityBatch(): Promise<void> {
       console.error(`[Solana] ⚠️ Dropping ${batch.length} activities after ${MAX_BATCH_RETRIES} consecutive failures`);
       consecutiveFailures = 0; // Reset so future batches can try
     } else {
-      // Re-queue failed activities for retry
-      activityQueue.unshift(...batch);
+      // Re-queue failed activities for retry (respect queue cap)
+      const spaceLeft = MAX_QUEUE_SIZE - activityQueue.length;
+      if (spaceLeft > 0) {
+        activityQueue.unshift(...batch.slice(0, spaceLeft));
+      }
     }
   }
 

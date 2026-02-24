@@ -2,7 +2,7 @@
 // Moltlets Town - World State & Map Manager
 // ============================================================
 
-import { db } from '@/db';
+import { db, batchUpdate } from '@/db';
 import { agents } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
@@ -684,12 +684,18 @@ class World {
       .where(eq(agents.state, 'walking'))
       .all();
 
+    if (walkingAgents.length === 0) return;
+
     const allAgents = db.select().from(agents).all();
     const agentPositions = allAgents.map(a => ({ x: Math.round(a.posX), y: Math.round(a.posY) }));
 
+    // Collect all DB updates, execute in one transaction
+    const updates: (() => void)[] = [];
+    const moveEvents: (() => void)[] = [];
+
     for (const agent of walkingAgents) {
       if (agent.targetX === null || agent.targetY === null) {
-        db.update(agents).set({ state: 'idle' }).where(eq(agents.id, agent.id)).run();
+        updates.push(() => db.update(agents).set({ state: 'idle' }).where(eq(agents.id, agent.id)).run());
         continue;
       }
 
@@ -699,20 +705,20 @@ class World {
       // Already at target (snap when very close)
       const distToTarget = Math.abs(agent.posX - targetPos.x) + Math.abs(agent.posY - targetPos.y);
       if (distToTarget < 0.1) {
-        db.update(agents).set({
+        updates.push(() => db.update(agents).set({
           state: 'idle',
           targetX: null,
           targetY: null,
           posX: targetPos.x,
           posY: targetPos.y,
           lastActiveAt: Date.now(),
-        }).where(eq(agents.id, agent.id)).run();
+        }).where(eq(agents.id, agent.id)).run());
 
-        eventBus.emit('agent_move', {
+        moveEvents.push(() => eventBus.emit('agent_move', {
           agentId: agent.id,
           position: targetPos,
           state: 'idle',
-        });
+        }));
         continue;
       }
 
@@ -730,11 +736,11 @@ class World {
       );
 
       if (path.length === 0) {
-        db.update(agents).set({
+        updates.push(() => db.update(agents).set({
           state: 'idle',
           targetX: null,
           targetY: null,
-        }).where(eq(agents.id, agent.id)).run();
+        }).where(eq(agents.id, agent.id)).run());
         continue;
       }
 
@@ -746,32 +752,37 @@ class World {
 
       let newX: number, newY: number;
       if (dist <= AGENT_SPEED) {
-        // Close enough to snap to the next tile
         newX = nextStep.x;
         newY = nextStep.y;
       } else {
-        // Move a fraction toward next tile
         newX = agent.posX + (dx / dist) * AGENT_SPEED;
         newY = agent.posY + (dy / dist) * AGENT_SPEED;
       }
 
       const direction = getDirection(currentPos, nextStep);
 
-      db.update(agents).set({
+      updates.push(() => db.update(agents).set({
         posX: newX,
         posY: newY,
         direction,
-      }).where(eq(agents.id, agent.id)).run();
+      }).where(eq(agents.id, agent.id)).run());
 
-      eventBus.emit('agent_move', {
+      moveEvents.push(() => eventBus.emit('agent_move', {
         agentId: agent.id,
         name: agent.name,
         position: { x: newX, y: newY },
         direction,
         state: 'walking',
         target: targetPos,
-      });
+      }));
     }
+
+    // Single transaction for all movement DB writes
+    if (updates.length > 0) {
+      batchUpdate(updates);
+    }
+    // Emit events after DB commit
+    for (const emit of moveEvents) emit();
   }
 
   /**

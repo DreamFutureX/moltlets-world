@@ -4,7 +4,7 @@
 // ============================================================
 
 import type { GameEvent, GameEventType } from '@/types';
-import { db, safeDbOperation } from '@/db';
+import { db, safeDbOperation, getSqlite } from '@/db';
 import { events } from '@/db/schema';
 
 type Listener = (event: GameEvent) => void;
@@ -96,17 +96,21 @@ class EventBus {
     const toFlush = this.eventQueue.splice(0, this.eventQueue.length);
 
     safeDbOperation(() => {
-      const stmt = db.insert(events);
-      const values = toFlush.map(e => ({
-        type: e.type,
-        payload: JSON.stringify(e.payload),
-        createdAt: e.timestamp,
-      }));
-
-      // Batch insert all events at once
-      for (const v of values) {
-        stmt.values(v).run();
-      }
+      const sqlite = getSqlite();
+      const insertStmt = sqlite.prepare(
+        'INSERT INTO events (id, type, payload, created_at) VALUES (?, ?, ?, ?)'
+      );
+      const transaction = sqlite.transaction((items: typeof toFlush) => {
+        for (const e of items) {
+          insertStmt.run(
+            crypto.randomUUID(),
+            e.type,
+            JSON.stringify(e.payload),
+            e.timestamp,
+          );
+        }
+      });
+      transaction(toFlush);
     }, undefined);
 
     this.isProcessing = false;
