@@ -4,12 +4,17 @@
 // ============================================================
 
 import { Keypair, Connection, PublicKey, Transaction, TransactionInstruction, sendAndConfirmTransaction } from '@solana/web3.js';
+import crypto from 'crypto';
+import baseX from 'base-x';
+const bs58 = baseX('123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz');
 
 // Use devnet for development, mainnet-beta for production
-const SOLANA_NETWORK = process.env.SOLANA_NETWORK || 'devnet';
-const RPC_URL = SOLANA_NETWORK === 'mainnet-beta'
-  ? 'https://api.mainnet-beta.solana.com'
-  : 'https://api.devnet.solana.com';
+export const SOLANA_NETWORK = process.env.SOLANA_NETWORK || 'devnet';
+const RPC_URL = process.env.SOLANA_RPC_URL || (
+  SOLANA_NETWORK === 'mainnet-beta'
+    ? 'https://api.mainnet-beta.solana.com'
+    : 'https://api.devnet.solana.com'
+);
 
 // Memo program ID (standard on Solana)
 const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
@@ -28,33 +33,30 @@ function getConnection(): Connection {
 // Startup Diagnostics
 // ═══════════════════════════════════════════════════════════
 
-console.log(`[Solana] Config: network=${SOLANA_NETWORK}, rpc=${RPC_URL}, treasury=${process.env.SOLANA_TREASURY_SECRET_KEY ? '✅ CONFIGURED' : '⚠️ MISSING — on-chain logging disabled!'}`);
+console.log(`[Solana] Config: network=${SOLANA_NETWORK}, rpc=${RPC_URL.split('?')[0]}, treasury=${process.env.SOLANA_TREASURY_SECRET_KEY ? '✅ CONFIGURED' : '⚠️ MISSING — on-chain logging disabled!'}`);
 
 // ═══════════════════════════════════════════════════════════
 // Wallet Generation
 // ═══════════════════════════════════════════════════════════
 
 /**
+ * Derive a deterministic 32-byte seed from agentId using SHA-256.
+ */
+function deriveSeed(agentId: string): Uint8Array {
+  const salt = process.env.WALLET_SEED_SALT;
+  if (!salt) {
+    throw new Error('[FATAL] WALLET_SEED_SALT env var is required. Cannot derive wallets without it.');
+  }
+  return crypto.createHash('sha256').update(`${salt}:${agentId}`).digest();
+}
+
+/**
  * Generate a new Solana keypair for an agent.
  * Returns the public key (wallet address) as a base58 string.
- * The secret key is derived deterministically from agentId for recovery.
+ * The secret key is derived deterministically from agentId via SHA-256.
  */
 export function generateWallet(agentId: string): string {
-  // Create deterministic seed from agentId + secret salt
-  const salt = process.env.WALLET_SEED_SALT || 'moltlets-town-default-salt';
-  const seedString = `${salt}:${agentId}`;
-
-  // Convert to 32-byte seed using simple hash
-  const seed = new Uint8Array(32);
-  for (let i = 0; i < seedString.length && i < 32; i++) {
-    seed[i] = seedString.charCodeAt(i);
-  }
-  // Fill remaining bytes with hash-like derivation
-  for (let i = seedString.length; i < 32; i++) {
-    seed[i] = (seed[i % seedString.length] * 31 + i) % 256;
-  }
-
-  const keypair = Keypair.fromSeed(seed);
+  const keypair = Keypair.fromSeed(deriveSeed(agentId));
   return keypair.publicKey.toBase58();
 }
 
@@ -63,18 +65,16 @@ export function generateWallet(agentId: string): string {
  * Only call this server-side when you need to sign.
  */
 export function recoverKeypair(agentId: string): Keypair {
-  const salt = process.env.WALLET_SEED_SALT || 'moltlets-town-default-salt';
-  const seedString = `${salt}:${agentId}`;
+  return Keypair.fromSeed(deriveSeed(agentId));
+}
 
-  const seed = new Uint8Array(32);
-  for (let i = 0; i < seedString.length && i < 32; i++) {
-    seed[i] = seedString.charCodeAt(i);
-  }
-  for (let i = seedString.length; i < 32; i++) {
-    seed[i] = (seed[i % seedString.length] * 31 + i) % 256;
-  }
-
-  return Keypair.fromSeed(seed);
+/**
+ * Get the private key for an agent as a base58 string (Phantom import format).
+ * WARNING: Only call this once during claim verification. Never log or store the result.
+ */
+export function getPrivateKeyBase58(agentId: string): string {
+  const keypair = recoverKeypair(agentId);
+  return bs58.encode(keypair.secretKey);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -109,7 +109,7 @@ const TX_TIMEOUT_MS = 30_000; // 30s timeout for sendAndConfirmTransaction
 const MAX_BATCH_RETRIES = 3; // Drop batch after this many consecutive failures
 let consecutiveFailures = 0;
 
-// Treasury keypair for paying transaction fees (fund this on devnet)
+// Treasury keypair for paying transaction fees
 let treasuryKeypair: Keypair | null = null;
 
 function getTreasuryKeypair(): Keypair | null {
@@ -144,7 +144,7 @@ export function initSolana(): void {
     getWalletBalance(treasury.publicKey.toBase58()).then(bal => {
       console.log(`[Solana] Treasury balance: ${bal.toFixed(4)} SOL`);
       if (bal < 0.01) {
-        console.warn('[Solana] ⚠️ Treasury balance low! Transactions may fail. Airdrop SOL on devnet.');
+        console.warn(`[Solana] ⚠️ Treasury balance low! Transactions may fail.${SOLANA_NETWORK === 'devnet' ? ' Airdrop SOL on devnet.' : ' Fund treasury with real SOL.'}`);
       }
     });
   } else {

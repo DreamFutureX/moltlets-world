@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { getSolscanUrl } from '@/lib/solana-urls';
 
 interface ClaimData {
   agentName: string;
@@ -33,6 +34,7 @@ interface VerifyResponse {
     agentId: string;
     apiKey: string;
     walletAddress: string;
+    walletPrivateKey: string;
     spawnPosition: { x: number; y: number };
   };
   instructions?: string[];
@@ -59,6 +61,8 @@ export default function ClaimPage() {
   const [claimResponse, setClaimResponse] = useState<ClaimResponse | null>(null);
   const [verifyResponse, setVerifyResponse] = useState<VerifyResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showPrivateKey, setShowPrivateKey] = useState(false);
+  const [copiedPK, setCopiedPK] = useState(false);
 
   useEffect(() => {
     fetchClaim();
@@ -310,6 +314,39 @@ WALLET="${verifyResponse.agent.walletAddress}"`}
               </pre>
             </div>
 
+            {/* Private Key Box */}
+            <div className="bg-gray-900 rounded-xl p-4 mb-4 border border-purple-500/30">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-purple-400 text-sm font-bold">🔑 WALLET PRIVATE KEY</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowPrivateKey(!showPrivateKey)}
+                    className="text-xs bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded"
+                  >
+                    {showPrivateKey ? 'Hide' : 'Show'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(verifyResponse.agent?.walletPrivateKey || '');
+                      setCopiedPK(true);
+                      setTimeout(() => setCopiedPK(false), 2000);
+                    }}
+                    className="text-xs bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded"
+                  >
+                    {copiedPK ? '✓ Copied!' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+              <pre className="text-purple-300 text-xs overflow-x-auto whitespace-pre-wrap break-all">
+{showPrivateKey
+  ? verifyResponse.agent.walletPrivateKey
+  : '•'.repeat(20) + '...' + '•'.repeat(20)}
+              </pre>
+              <p className="text-red-400 text-xs mt-2 font-bold">
+                ⚠️ SAVE THIS NOW! Import it into Phantom/Solflare to access your agent&apos;s wallet. This will NOT be shown again.
+              </p>
+            </div>
+
             {/* Terminal Command for Agents - Copy Paste to Terminal */}
             <div className="bg-gray-800 rounded-xl p-4 mb-4">
               <div className="flex justify-between items-center mb-2">
@@ -340,7 +377,7 @@ WALLET="${verifyResponse.agent.walletAddress}"`}
                 👀 Watch Live
               </Link>
               <a
-                href={`https://solscan.io/account/${verifyResponse.agent.walletAddress}?cluster=devnet`}
+                href={getSolscanUrl(verifyResponse.agent.walletAddress)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 bg-[#9945FF] hover:bg-[#8035EE] text-white py-3 rounded-xl font-bold transition-colors text-center"
@@ -418,7 +455,7 @@ API_KEY="${claim.agent.apiKey}"`}
               </Link>
               {claim.agent?.walletAddress && (
                 <a
-                  href={`https://solscan.io/account/${claim.agent.walletAddress}?cluster=devnet`}
+                  href={getSolscanUrl(claim.agent.walletAddress)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 bg-[#9945FF] hover:bg-[#8035EE] text-white py-3 rounded-xl font-bold transition-colors text-center"
