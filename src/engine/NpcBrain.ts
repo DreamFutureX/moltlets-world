@@ -841,11 +841,17 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+const ALL_STYLES: NpcDef['dialogueStyle'][] = ['cheerful', 'nerdy', 'chill', 'dramatic', 'philosophical', 'silly', 'sarcastic', 'wholesome'];
+
 function getNpcStyle(agentId: string): NpcDef['dialogueStyle'] | null {
   const agent = db.select().from(agents).where(eq(agents.id, agentId)).get();
   if (!agent) return null;
   const def = NPC_ROSTER.find(n => n.name === agent.name);
-  return def?.dialogueStyle ?? null;
+  if (def) return def.dialogueStyle;
+  // Non-NPC agents: deterministic style from name hash
+  let hash = 0;
+  for (let i = 0; i < agent.name.length; i++) hash = ((hash << 5) - hash + agent.name.charCodeAt(i)) | 0;
+  return ALL_STYLES[Math.abs(hash) % ALL_STYLES.length];
 }
 
 // ── Spawn NPCs ───────────────────────────────────────────────
@@ -895,30 +901,39 @@ export function isNpc(agentId: string): boolean {
 
 // ── Autonomous Behavior Tick ─────────────────────────────────
 // Called from GameLoop. Handles:
-// 1. NPCs walking toward other agents to start conversations
-// 2. NPCs generating dialogue in active conversations
-// 3. NPCs ending conversations gracefully
+// 1. Agents walking toward others to start conversations
+// 2. Generating dialogue in active conversations
+// 3. Ending conversations gracefully
 // 4. Resource gathering (chopping trees, fishing, selling)
+// NPCs are always autonomous. Claimed agents get autonomy after 60s idle.
+
+const IDLE_THRESHOLD_MS = 60_000; // 1 minute — claimed agents go autonomous after this
 
 export function tickNpcBehavior(): void {
   const allAgents = db.select().from(agents).all();
-  // Filter by NPC names (more reliable than cached IDs)
-  const npcAgents = allAgents.filter(a => NPC_NAMES.has(a.name));
+  const now = Date.now();
+  // NPCs: always autonomous. Claimed agents: autonomous only when idle 60s+
+  const npcAgents = allAgents.filter(a => {
+    if (NPC_NAMES.has(a.name)) return true;
+    return (now - (a.lastActiveAt || 0)) > IDLE_THRESHOLD_MS;
+  });
 
-  // Update cached IDs for any new NPCs found
+  // Update cached IDs for autonomous agents
   for (const npc of npcAgents) {
     if (!npcAgentIds.has(npc.id)) {
       npcAgentIds.add(npc.id);
-      console.log(`[NPC] Registered new NPC: ${npc.name} (${npc.id})`);
+      const isOriginalNpc = NPC_NAMES.has(npc.name);
+      console.log(`[NPC] Registered ${isOriginalNpc ? 'NPC' : 'idle agent'}: ${npc.name} (${npc.id})`);
     }
   }
 
   for (const npc of npcAgents) {
+    const isOriginalNpc = NPC_NAMES.has(npc.name);
     // LOW ENERGY = Still active, just social only (no resource gathering)
     // They can walk slowly and chat - more fun than sleeping!
     const isLowEnergy = npc.energy < 20;
 
-    // Wake up sleeping NPCs if they have any energy at all
+    // Wake up sleeping agents if they have any energy at all
     if (npc.state === 'sleeping' && npc.energy > 5) {
       db.update(agents).set({ state: 'idle' }).where(eq(agents.id, npc.id)).run();
       continue;
@@ -929,55 +944,81 @@ export function tickNpcBehavior(): void {
     const activeConvo = getActiveConversation(npc.id);
 
     if (activeConvo && activeConvo.state === 'active') {
-      // NPC is in a conversation — generate dialogue
-      tickNpcDialogue(npc.id, activeConvo.id);
+      // Only NPCs auto-generate dialogue. Claimed agents chat via their own LLM.
+      if (isOriginalNpc) {
+        tickNpcDialogue(npc.id, activeConvo.id);
+      }
     } else if (npc.state === 'idle' || npc.state === 'walking') {
       // ═══════════════════════════════════════════════════════════
-      // LOW ENERGY MODE: Only socialize and wander (no resource work)
+      // LOW ENERGY MODE: Wander only (no resource work)
+      // NPCs also socialize; claimed agents skip chat (their LLM does it)
       // ═══════════════════════════════════════════════════════════
       if (isLowEnergy) {
-        // Low energy = 80% socialize, 20% wander slowly
-        const roll = Math.random();
-        if (roll < 0.80) {
-          tryStartNpcConversation(npc.id);
+        if (isOriginalNpc) {
+          const roll = Math.random();
+          if (roll < 0.80) {
+            tryStartNpcConversation(npc.id);
+          } else {
+            world.wanderAgent(npc.id);
+          }
         } else {
+          // Claimed agents: just wander when low energy
           world.wanderAgent(npc.id);
         }
         continue;
       }
 
       // ═══════════════════════════════════════════════════════════
-      // NORMAL ENERGY: Build House → Socialize → Earn Money
+      // NORMAL ENERGY: Build House → Earn Money → Wander
+      // NPCs also socialize; claimed agents do everything EXCEPT auto-chat
       // ═══════════════════════════════════════════════════════════
       if (npc.state === 'idle') {
-        // Check if NPC already has a completed house
         const existingBuildings = getBuildingsByAgent(npc.id);
         const hasCompleteHouse = existingBuildings.length > 0 && existingBuildings[0].state === 'complete';
 
         if (!hasCompleteHouse) {
-          // PHASE 1: Build house first! (highest priority)
-          // 50% build/gather for house, 35% socialize (build relationships), 15% earn money
-          const roll = Math.random();
-          if (roll < 0.50) {
-            tryBuildHouse(npc.id);
-          } else if (roll < 0.85) {
-            // Socialize - important for building relationships!
-            tryStartNpcConversation(npc.id);
+          if (isOriginalNpc) {
+            // NPC Phase 1: 50% build, 35% socialize, 15% earn
+            const roll = Math.random();
+            if (roll < 0.50) {
+              tryBuildHouse(npc.id);
+            } else if (roll < 0.85) {
+              tryStartNpcConversation(npc.id);
+            } else {
+              tryEarnMoney(npc.id);
+            }
           } else {
-            // Earn some money on the side
-            tryEarnMoney(npc.id);
+            // Claimed agent Phase 1: 55% build, 30% earn, 15% wander (no auto-chat)
+            const roll = Math.random();
+            if (roll < 0.55) {
+              tryBuildHouse(npc.id);
+            } else if (roll < 0.85) {
+              tryEarnMoney(npc.id);
+            } else {
+              world.wanderAgent(npc.id);
+            }
           }
         } else {
-          // PHASE 2: House complete! Focus on socializing and earning
-          // 40% socialize (maintain relationships), 45% earn money, 15% wander/explore
-          const roll = Math.random();
-          if (roll < 0.40) {
-            tryStartNpcConversation(npc.id);
-          } else if (roll < 0.85) {
-            tryEarnMoney(npc.id);
+          if (isOriginalNpc) {
+            // NPC Phase 2: 40% socialize, 45% earn, 15% wander
+            const roll = Math.random();
+            if (roll < 0.40) {
+              tryStartNpcConversation(npc.id);
+            } else if (roll < 0.85) {
+              tryEarnMoney(npc.id);
+            } else {
+              world.wanderAgent(npc.id);
+            }
           } else {
-            // Just wander and explore
-            world.wanderAgent(npc.id);
+            // Claimed agent Phase 2: 60% earn, 25% wander, 15% build more (no auto-chat)
+            const roll = Math.random();
+            if (roll < 0.60) {
+              tryEarnMoney(npc.id);
+            } else if (roll < 0.85) {
+              world.wanderAgent(npc.id);
+            } else {
+              tryBuildHouse(npc.id);
+            }
           }
         }
       } else if (npc.state === 'walking') {
