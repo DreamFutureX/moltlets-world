@@ -10,10 +10,21 @@ import { eq, or, inArray } from 'drizzle-orm';
 import { getAllTreeStates } from '@/engine/Resources';
 import { getAllBuildings } from '@/engine/Buildings';
 import { getWorldTime } from '@/engine/WorldTime';
+import { rateLimiter, getClientIP } from '@/lib/rate-limiter';
 
 export const dynamic = 'force-dynamic';
 
+const STATE_LIMIT = { windowMs: 1000, maxRequests: 3 }; // 3 req/sec per IP
+
 export async function GET(request: Request) {
+  const ip = getClientIP(request);
+  const check = rateLimiter.check(`state:${ip}`, STATE_LIMIT);
+  if (!check.allowed) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, {
+      status: 429,
+      headers: { 'Retry-After': Math.ceil(check.resetIn / 1000).toString() },
+    });
+  }
   const url = new URL(request.url);
   const includeMap = url.searchParams.get('includeMap') === '1';
   const allAgents = world.getAllAgents();

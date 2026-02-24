@@ -8,7 +8,15 @@ import { db } from '@/db';
 import { agents } from '@/db/schema';
 import { getExplorerUrl } from '@/lib/solana';
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Require admin key to access wallet data
+  const url = new URL(request.url);
+  const key = url.searchParams.get('key');
+  const adminKey = process.env.ADMIN_SECRET || 'moltlets-admin-2026';
+  if (key !== adminKey) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     // Get all agents with wallets
     const allAgents = db.select({
