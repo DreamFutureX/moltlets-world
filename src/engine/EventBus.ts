@@ -98,12 +98,11 @@ class EventBus {
     safeDbOperation(() => {
       const sqlite = getSqlite();
       const insertStmt = sqlite.prepare(
-        'INSERT INTO events (id, type, payload, created_at) VALUES (?, ?, ?, ?)'
+        'INSERT INTO events (type, payload, created_at) VALUES (?, ?, ?)'
       );
       const transaction = sqlite.transaction((items: typeof toFlush) => {
         for (const e of items) {
           insertStmt.run(
-            crypto.randomUUID(),
             e.type,
             JSON.stringify(e.payload),
             e.timestamp,
