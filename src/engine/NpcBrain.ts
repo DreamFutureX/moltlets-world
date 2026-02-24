@@ -1414,7 +1414,13 @@ function tryStartNpcConversation(npcId: string): void {
   if (Math.random() > 0.15) return;
 
   const nearby = world.getNearbyAgents({ x: npc.posX, y: npc.posY }, CONVERSATION_DISTANCE, npcId);
-  const availableTargets = nearby.filter(a => a.state === 'idle' && a.energy > 15);
+  const now = Date.now();
+  const availableTargets = nearby.filter(a => {
+    if (a.state !== 'idle' || a.energy <= 15) return false;
+    // Don't pull active claimed agents into conversations — they control their own chat
+    if (!NPC_NAMES.has(a.name) && (now - (a.lastActiveAt || 0)) < IDLE_THRESHOLD_MS) return false;
+    return true;
+  });
 
   if (availableTargets.length > 0) {
     const target = pick(availableTargets);
