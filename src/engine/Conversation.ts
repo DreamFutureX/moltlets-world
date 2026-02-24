@@ -4,7 +4,7 @@
 
 import { db } from '@/db';
 import { conversations, messages, agents } from '@/db/schema';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and, or, desc } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { eventBus } from './EventBus';
 import { updateRelationship } from './Relationship';
@@ -226,8 +226,9 @@ export function tickConversations(): void {
     if (convo.state === 'active') {
       const lastMsg = db.select().from(messages)
         .where(eq(messages.conversationId, convo.id))
-        .all()
-        .sort((a, b) => b.createdAt - a.createdAt)[0];
+        .orderBy(desc(messages.createdAt))
+        .limit(1)
+        .get();
 
       const lastActivity = lastMsg ? lastMsg.createdAt : convo.startedAt;
       if (now - lastActivity > CONVERSATION_TIMEOUT_MS) {
