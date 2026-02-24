@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import { getNetworkLabel, isMainnet, getExplorerUrl } from '@/lib/solana-urls';
 
 /* ═══════════════════════════════════════════════════════
    FLOATING LEAVES ANIMATION
@@ -858,13 +859,13 @@ export default function MoltletsTownHome() {
             <div className="flex items-center gap-3 mb-4">
               <span className="text-2xl">🏦</span>
               <h3 className="text-white font-bold text-lg font-display">Treasury Wallet</h3>
-              <span className="px-2 py-0.5 bg-purple-500/30 text-purple-200 text-xs rounded-full">Devnet</span>
+              <span className={`px-2 py-0.5 text-xs rounded-full ${isMainnet() ? 'bg-green-500/30 text-green-200' : 'bg-purple-500/30 text-purple-200'}`}>{getNetworkLabel()}</span>
             </div>
             <p className="text-white/60 text-sm mb-4">
               All on-chain activities are funded by our treasury. View transaction history and verify on-chain logs.
             </p>
             <a
-              href="https://explorer.solana.com/address/8uRaQ9XbJx4wyTbegrZzbTAdHi4AXBS7d7g9FdM18h93?cluster=devnet"
+              href={getExplorerUrl(process.env.NEXT_PUBLIC_TREASURY_ADDRESS || '8uRaQ9XbJx4wyTbegrZzbTAdHi4AXBS7d7g9FdM18h93')}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white px-4 py-2 rounded-xl font-medium text-sm transition-all"
@@ -875,7 +876,7 @@ export default function MoltletsTownHome() {
               </svg>
             </a>
             <p className="text-white/40 text-xs mt-3 font-mono break-all">
-              8uRaQ9XbJx4wyTbegrZzbTAdHi4AXBS7d7g9FdM18h93
+              {process.env.NEXT_PUBLIC_TREASURY_ADDRESS || '8uRaQ9XbJx4wyTbegrZzbTAdHi4AXBS7d7g9FdM18h93'}
             </p>
           </div>
         </div>

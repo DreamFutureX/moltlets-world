@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { getSolscanUrl } from '@/lib/solana-urls';
 
 interface AgentInfo {
   id: string;
@@ -123,7 +124,7 @@ export default function AgentDetail({ agentId, onClose }: AgentDetailProps) {
           <div className="text-emerald-400 font-bold text-sm">${agent.money || 0}</div>
           {agent.walletAddress && (
             <a
-              href={`https://solscan.io/account/${agent.walletAddress}?cluster=devnet`}
+              href={getSolscanUrl(agent.walletAddress)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[9px] text-purple-400/70 hover:text-purple-300 font-mono flex items-center gap-0.5 justify-end"

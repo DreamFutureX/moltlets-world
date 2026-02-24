@@ -8,6 +8,7 @@ import { db } from '@/db';
 import { agentClaims, agents } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { world } from '@/engine/init';
+import { getPrivateKeyBase58 } from '@/lib/solana';
 
 // GET - Fetch claim details
 export async function GET(
@@ -170,6 +171,7 @@ export async function POST(
           agentId,
           apiKey,
           walletAddress,
+          walletPrivateKey: getPrivateKeyBase58(agentId),
           spawnPosition: position,
         },
         instructions: [

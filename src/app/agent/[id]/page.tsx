@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { getSolscanUrl } from '@/lib/solana-urls';
 
 interface AgentInfo {
   id: string;
@@ -339,7 +340,7 @@ export default function AgentProfilePage() {
             {/* Wallet */}
             {agent.walletAddress && (
               <a
-                href={`https://solscan.io/account/${agent.walletAddress}?cluster=devnet`}
+                href={getSolscanUrl(agent.walletAddress)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] bg-purple-50 text-purple-600 hover:text-purple-800 border border-purple-200 transition-colors font-mono"
