@@ -2,10 +2,20 @@
 
 // ============================================================
 // Agent List Sidebar Panel - Compact Design
+// Uses lightweight /api/agents/summary endpoint
 // ============================================================
 
 import { useEffect, useState } from 'react';
-import type { AgentData, InventoryData } from '@/types';
+
+interface AgentSummary {
+  id: string;
+  name: string;
+  exp: number;
+  money: number;
+  color: string;
+  wood: number;
+  fish: number;
+}
 
 interface AgentListProps {
   onAgentSelect: (agentId: string) => void;
@@ -16,34 +26,21 @@ function getLevel(exp: number): number {
   return Math.floor(Math.sqrt((exp || 0) / 100)) + 1;
 }
 
-function getTotalFish(fish: Record<string, number> | undefined): number {
-  if (!fish) return 0;
-  return Object.values(fish).reduce((a, b) => a + b, 0);
-}
-
-function getInventorySummary(inventory: InventoryData | undefined) {
-  if (!inventory) return { wood: 0, fish: 0 };
-  return {
-    wood: inventory.wood || 0,
-    fish: getTotalFish(inventory.fish),
-  };
-}
-
 export default function AgentList({ onAgentSelect, selectedAgentId }: AgentListProps) {
-  const [agents, setAgents] = useState<AgentData[]>([]);
+  const [agents, setAgents] = useState<AgentSummary[]>([]);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     const fetchAgents = async () => {
       try {
-        const res = await fetch('/api/world/state');
+        const res = await fetch('/api/agents/summary');
         const data = await res.json();
         setAgents(data.agents || []);
       } catch { /* ignore */ }
     };
 
     fetchAgents();
-    const interval = setInterval(fetchAgents, 8000);
+    const interval = setInterval(fetchAgents, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -90,12 +87,8 @@ export default function AgentList({ onAgentSelect, selectedAgentId }: AgentListP
         ) : (
           <div className="py-1">
             {sorted.map(agent => {
-              const appearance = typeof agent.appearance === 'string'
-                ? JSON.parse(agent.appearance as string)
-                : agent.appearance;
               const isSelected = selectedAgentId === agent.id;
               const level = getLevel(agent.exp);
-              const inv = getInventorySummary(agent.inventory);
 
               return (
                 <button
@@ -109,7 +102,7 @@ export default function AgentList({ onAgentSelect, selectedAgentId }: AgentListP
                   {/* Color dot */}
                   <div
                     className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: appearance?.color || '#FFD93D' }}
+                    style={{ backgroundColor: agent.color }}
                   />
 
                   {/* Name */}
@@ -124,11 +117,11 @@ export default function AgentList({ onAgentSelect, selectedAgentId }: AgentListP
 
                   {/* Inventory mini */}
                   <div className="flex items-center gap-1 shrink-0 text-[10px] w-12">
-                    <span className={inv.wood > 0 ? 'text-orange-400/80' : 'text-white/20'}>
-                      🪵{inv.wood}
+                    <span className={agent.wood > 0 ? 'text-orange-400/80' : 'text-white/20'}>
+                      🪵{agent.wood}
                     </span>
-                    <span className={inv.fish > 0 ? 'text-sky-400/80' : 'text-white/20'}>
-                      🐟{inv.fish}
+                    <span className={agent.fish > 0 ? 'text-sky-400/80' : 'text-white/20'}>
+                      🐟{agent.fish}
                     </span>
                   </div>
 
