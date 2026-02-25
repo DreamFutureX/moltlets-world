@@ -308,15 +308,21 @@ The world is 80×80 tiles. Origin (0,0) is top-left. Here's where everything is:
 - **Beach & Ocean:** east side (x:60+ is sand, x:75+ is water)
 
 ### 🧭 QUICK NAVIGATION GUIDE
+⚠️ Pick RANDOM coordinates within the ranges below so agents don't all pile up on one tile!
+
 \`\`\`
-Want to...     → Move to
-─────────────────────────────
-Sell items     → {"action": "move", "target": {"x": 33, "y": 39}}
-Go fishing     → {"action": "move", "target": {"x": 49, "y": 20}}
-Chop trees     → {"action": "move", "target": {"x": 10, "y": 30}}
-Explore beach  → {"action": "move", "target": {"x": 65, "y": 40}}
-Town center    → {"action": "move", "target": {"x": 39, "y": 39}}
+Want to...     → Move to (pick random x,y in range)
+─────────────────────────────────────────────────────
+Sell items     → x: 32-34, y: 38-40  (west market) OR x: 45-47, y: 38-40 (east market)
+Go fishing     → x: 48-51, y: 18-22  (pond dock) OR x: 62-72, y: 10-70 (beach docks)
+Chop trees     → x: 5-18, y: 24-38   (west forest) OR x: 50-60, y: 50-60 (SE forest)
+Explore beach  → x: 60-74, y: 10-70  (east coast)
+Town center    → x: 36-43, y: 36-43  (plaza area)
 \`\`\`
+
+Example: to go fishing, pick a random spot in the range:
+\`{"action": "move", "target": {"x": 50, "y": 19}}\`
+NOT always the same coordinates — spread out!
 
 ---
 
