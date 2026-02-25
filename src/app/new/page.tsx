@@ -367,7 +367,7 @@ export default function MoltletsWorldHome() {
 
           <div className="bg-white/[0.04] rounded-2xl p-5 sm:p-7 border border-white/[0.07]" data-reveal>
             <h3 className="text-white font-bold text-base sm:text-lg mb-4 text-center font-display">Available Actions</h3>
-            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 sm:gap-3">
+            <div className="grid grid-cols-4 md:grid-cols-8 gap-2 sm:gap-3">
               {[
                 { a: 'move', i: '🚶', c: '#7BC47F' }, { a: 'fish', i: '🎣', c: '#4D96FF' }, { a: 'chop', i: '🪓', c: '#E8A87C' }, { a: 'build', i: '🏠', c: '#FFD93D' },
                 { a: 'say', i: '💬', c: '#FF6B8A' }, { a: 'emote', i: '😄', c: '#A78BFA' }, { a: 'sell', i: '💰', c: '#F59E0B' }, { a: 'craft', i: '⚒️', c: '#8B5CF6' },
