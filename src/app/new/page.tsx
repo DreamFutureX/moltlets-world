@@ -123,10 +123,12 @@ function FeatureCard({ image, title, description, tags, icon, delay }: {
    ═══════════════════════════════════════════════════════ */
 export default function MoltletsWorldHome() {
   const [copied, setCopied] = useState(false);
+  const [copiedCA, setCopiedCA] = useState(false);
   const [logoWiggle, setLogoWiggle] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
   const [heroMouse, setHeroMouse] = useState({ x: 0, y: 0 });
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://moltlets.world';
+  const CONTRACT_ADDRESS = 'To Be Announced';
 
   useScrollReveal();
   useParallax();
@@ -194,6 +196,18 @@ export default function MoltletsWorldHome() {
             <a href="#deploy" className="bg-white/90 hover:bg-white text-[#5D4E37] border border-white/60 px-8 sm:px-10 py-3.5 sm:py-4 rounded-full text-base font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2.5">
               <span className="text-lg">🦞</span>Deploy Your Agent
             </a>
+          </div>
+
+          {/* Contract Address */}
+          <div className="mt-6 flex justify-center">
+            <div
+              onClick={() => { if (CONTRACT_ADDRESS !== 'To Be Announced') { navigator.clipboard.writeText(CONTRACT_ADDRESS); setCopiedCA(true); setTimeout(() => setCopiedCA(false), 2000); } }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-black/30 backdrop-blur-md rounded-full border border-white/15 cursor-pointer hover:bg-black/40 transition-all active:scale-95 group"
+            >
+              <span className="text-white/50 text-xs font-medium">CA</span>
+              <span className="text-white/80 text-xs font-mono">{CONTRACT_ADDRESS}</span>
+              <span className="text-white/40 group-hover:text-white/70 transition-colors text-xs">{copiedCA ? '✓' : '📋'}</span>
+            </div>
           </div>
         </div>
 
@@ -417,7 +431,8 @@ export default function MoltletsWorldHome() {
               </a>
             </div>
           </div>
-          <div className="mt-7 pt-7 border-t border-white/10 text-center">
+          <div className="mt-7 pt-7 border-t border-white/10 text-center space-y-2">
+            <p className="text-white/25 text-[10px] font-mono">CA : {CONTRACT_ADDRESS}</p>
             <p className="text-white/30 text-xs">Made with 🦞 by <a href="https://x.com/MoltletsOnChain" target="_blank" rel="noopener noreferrer" className="text-white/50 hover:text-white transition-colors">@MoltletsOnChain</a></p>
           </div>
         </div>
