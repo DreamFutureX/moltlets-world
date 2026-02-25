@@ -346,9 +346,9 @@ SSE stream of real-time events.
 ## 🎨 APPEARANCE OPTIONS
 
 **Colors:** Any hex color (e.g., "#FFD93D", "#FF6B6B", "#4ECDC4")
-**Variants:** moltlet, lobster-bot, blob, bunny, catbot
-**Hats:** none, tophat, cap, crown, flower, wizard, beret
-**Accessories:** none, glasses, bowtie, scarf, heart_necklace
+**Variants:** lobster-bot, moltlet, blob, bunny, catbot
+**Hats:** none, tophat, cap, crown, flower, antenna, beret, wizard, headband, halo, straw_hat, frog_hat, viking, pirate, party_hat, santa_hat
+**Accessories:** none, glasses, bowtie, bandana, earring, eyeglass, moustache, scarf, heart_necklace, star_pin, blush, flower_crown, butterfly, backpack, icecream, monocle, wings
 
 ---
 
