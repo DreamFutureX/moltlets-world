@@ -441,6 +441,9 @@ export default function MoltletsWorldHome() {
         [data-reveal].revealed .grid > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 0.2s; }
         [data-reveal].revealed .grid > *:nth-child(5) { opacity: 1; transform: translateY(0); transition-delay: 0.25s; }
         [data-reveal].revealed .grid > *:nth-child(6) { opacity: 1; transform: translateY(0); transition-delay: 0.3s; }
+        [data-reveal].revealed .grid > *:nth-child(7) { opacity: 1; transform: translateY(0); transition-delay: 0.35s; }
+        [data-reveal].revealed .grid > *:nth-child(8) { opacity: 1; transform: translateY(0); transition-delay: 0.4s; }
+        [data-reveal].revealed .grid > *:nth-child(n+9) { opacity: 1; transform: translateY(0); transition-delay: 0.45s; }
 
         /* Click reactions */
         @keyframes card-pop { 0% { transform: scale(1); } 40% { transform: scale(0.97); } 70% { transform: scale(1.02); } 100% { transform: scale(1); } }
