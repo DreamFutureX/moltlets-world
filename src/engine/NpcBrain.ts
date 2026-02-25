@@ -768,6 +768,13 @@ export const NPC_ROSTER: NpcDef[] = [
     appearance: { color: '#C0C0C0', variant: 'blob', hat: 'santa_hat', accessory: 'icecream', expression: 'happy' },
     dialogueStyle: 'cheerful',
   },
+  {
+    name: 'Grok',
+    bio: 'A stoic observer who processes everything deeply before responding with surprisingly sharp insights.',
+    personality: ['analytical', 'stoic', 'sharp'],
+    appearance: { color: '#808080', variant: 'blob', hat: 'none', accessory: 'none', expression: 'neutral' },
+    dialogueStyle: 'sarcastic',
+  },
 ];
 
 // ── Dialogue Banks (per style) ───────────────────────────────
