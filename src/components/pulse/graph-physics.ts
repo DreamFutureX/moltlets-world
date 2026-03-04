@@ -14,6 +14,7 @@ export interface GraphNode {
   radius: number;
   level: number;
   money: number;
+  state: string;
   flashUntil: number;
 }
 
@@ -29,7 +30,7 @@ export interface GraphEdge {
 // ── Initialize nodes in a circle ────────────────────────────
 
 export function initializeNodes(
-  agents: { id: string; name: string; color: string; exp: number; money: number }[],
+  agents: { id: string; name: string; color: string; exp: number; money: number; state: string }[],
   w: number,
   h: number,
 ): GraphNode[] {
@@ -51,25 +52,52 @@ export function initializeNodes(
       radius: Math.max(6, Math.min(18, 6 + level * 1.5)),
       level,
       money: a.money,
+      state: a.state || 'idle',
       flashUntil: 0,
     };
   });
 }
 
-// ── Build edges from relationship data ──────────────────────
+// ── Build edges — top N strongest per agent + all rivals ─────
+
+const MAX_EDGES_PER_AGENT = 3;
 
 export function buildEdges(
   relationships: { agent1Id: string; agent2Id: string; score: number; status: string; interactionCount: number }[],
 ): GraphEdge[] {
-  return relationships
-    .filter(r => Math.abs(r.score) >= 3) // skip near-zero relationships
+  // Always include rival edges (rare, interesting)
+  const rivals = relationships.filter(r => r.status === 'rival');
+
+  // For each agent, pick their top N strongest positive relationships
+  const agentTopEdges = new Map<string, typeof relationships>();
+  for (const r of relationships) {
+    if (r.status === 'rival') continue;
+    for (const id of [r.agent1Id, r.agent2Id]) {
+      if (!agentTopEdges.has(id)) agentTopEdges.set(id, []);
+      agentTopEdges.get(id)!.push(r);
+    }
+  }
+
+  const selectedKeys = new Set<string>();
+  for (const [, rels] of agentTopEdges) {
+    rels.sort((a, b) => b.score - a.score);
+    for (const r of rels.slice(0, MAX_EDGES_PER_AGENT)) {
+      selectedKeys.add(r.agent1Id + ':' + r.agent2Id);
+    }
+  }
+
+  const selected = relationships.filter(
+    r => r.status === 'rival' || selectedKeys.has(r.agent1Id + ':' + r.agent2Id),
+  );
+
+  return [...new Map(selected.map(r => [r.agent1Id + ':' + r.agent2Id, r])).values()]
     .map(r => ({
       source: r.agent1Id,
       target: r.agent2Id,
       score: r.score,
       status: r.status,
       interactionCount: r.interactionCount,
-      pulseT: Math.random(), // stagger pulses
+      pulseT: Math.random(),
     }));
 }
 
@@ -95,7 +123,6 @@ export function stepSimulation(
   const cx = w / 2;
   const cy = h / 2;
 
-  // Build node index for O(1) lookup
   const nodeIdx = new Map<string, number>();
   for (let i = 0; i < n; i++) nodeIdx.set(nodes[i].id, i);
 
@@ -134,7 +161,6 @@ export function stepSimulation(
     const dy = b.y - a.y;
     const dist = Math.sqrt(dx * dx + dy * dy) || 1;
 
-    // Stronger relationships pull closer
     const strengthMult = Math.abs(edge.score) / 50;
     const ideal = IDEAL_LENGTH / Math.max(0.5, strengthMult);
     const force = ATTRACTION * (dist - ideal) * dt;
@@ -149,31 +175,26 @@ export function stepSimulation(
 
   // 3. Centering + damping + boundary + update positions
   for (const node of nodes) {
-    // Centering force
     node.vx += (cx - node.x) * CENTERING * dt;
     node.vy += (cy - node.y) * CENTERING * dt;
 
-    // Boundary force
     if (node.x < BOUNDARY_MARGIN) node.vx += BOUNDARY_FORCE * dt;
     if (node.x > w - BOUNDARY_MARGIN) node.vx -= BOUNDARY_FORCE * dt;
     if (node.y < BOUNDARY_MARGIN) node.vy += BOUNDARY_FORCE * dt;
     if (node.y > h - BOUNDARY_MARGIN) node.vy -= BOUNDARY_FORCE * dt;
 
-    // Damping
     node.vx *= DAMPING;
     node.vy *= DAMPING;
 
-    // Update position
     node.x += node.vx * dt;
     node.y += node.vy * dt;
 
-    // Hard clamp
     node.x = Math.max(node.radius, Math.min(w - node.radius, node.x));
     node.y = Math.max(node.radius, Math.min(h - node.radius, node.y));
   }
 }
 
-// ── Add gentle drift after simulation settles ───────────────
+// ── Gentle drift after settled ──────────────────────────────
 
 export function applyDrift(nodes: GraphNode[], time: number): void {
   for (let i = 0; i < nodes.length; i++) {
@@ -204,7 +225,6 @@ export function findNodeAtPoint(
   offsetX: number = 0,
   offsetY: number = 0,
 ): GraphNode | null {
-  // Transform point to graph space
   const gx = (x - offsetX) / scale;
   const gy = (y - offsetY) / scale;
 
@@ -215,7 +235,7 @@ export function findNodeAtPoint(
     const dx = node.x - gx;
     const dy = node.y - gy;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    const hitRadius = Math.max(node.radius + 4, 12); // generous hit area
+    const hitRadius = Math.max(node.radius + 6, 14);
     if (dist < hitRadius && dist < closestDist) {
       closest = node;
       closestDist = dist;

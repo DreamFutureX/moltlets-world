@@ -7,7 +7,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { GameEvent } from '@/types';
 
-const MAX_EVENTS = 100;
+const MAX_EVENTS = 15;
 const RECONNECT_BASE = 1000;
 const RECONNECT_MAX = 30000;
 const HIDDEN_EVENTS = new Set(['heartbeat', 'world_tick', 'agent_move']);

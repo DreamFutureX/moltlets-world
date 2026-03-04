@@ -59,7 +59,7 @@ export default function ActivityFeed({ events, connected }: Props) {
         {events.length === 0 ? (
           <p className="text-[10px] text-white/20 text-center py-4">Waiting for events...</p>
         ) : (
-          events.map((evt, i) => {
+          events.slice(-10).map((evt, i) => {
             const config = EVENT_CONFIG[evt.type];
             if (!config) return null;
             const payload = evt.payload as Record<string, unknown>;
