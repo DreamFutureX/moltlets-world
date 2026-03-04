@@ -12,8 +12,6 @@ import { useSSEStream } from '@/components/pulse/useSSEStream';
 import RelationshipGraph from '@/components/pulse/RelationshipGraph';
 import WorldStatusPanel from '@/components/pulse/WorldStatusPanel';
 import EconomyPanel from '@/components/pulse/EconomyPanel';
-import AgentStatsPanel from '@/components/pulse/AgentStatsPanel';
-import OnChainPanel from '@/components/pulse/OnChainPanel';
 import ActivityFeed from '@/components/pulse/ActivityFeed';
 import NodeDetailDrawer from '@/components/pulse/NodeDetailDrawer';
 
@@ -22,6 +20,7 @@ export default function PulsePage() {
   const sse = useSSEStream();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [showHUD, setShowHUD] = useState(true);
 
   const selectedAgent = useMemo(
     () => world.agents.find(a => a.id === selectedNodeId) || null,
@@ -43,15 +42,6 @@ export default function PulsePage() {
     () => world.buildings.filter(b => b.state !== 'complete').length,
     [world.buildings],
   );
-
-  // Legend data
-  const legendItems = [
-    { label: 'Close Friend', color: '#e91e8a' },
-    { label: 'Friend', color: '#2ecc71' },
-    { label: 'Acquaintance', color: '#3498db' },
-    { label: 'Stranger', color: '#95a5a6' },
-    { label: 'Rival', color: '#e74c3c' },
-  ];
 
   return (
     <div className="h-screen w-screen bg-[#1a1a2e] overflow-hidden relative select-none">
@@ -91,54 +81,52 @@ export default function PulsePage() {
               <span className="text-[10px] text-white/60 font-bold">{world.agents.length}</span>
               <span className="text-[10px] text-white/30">agents</span>
             </div>
+            {/* HUD toggle */}
+            <button
+              onClick={() => setShowHUD(h => !h)}
+              className="bg-black/40 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-white/40 hover:text-white/70 transition-colors text-sm"
+              title={showHUD ? 'Hide panels' : 'Show panels'}
+            >
+              {showHUD ? '👁' : '👁‍🗨'}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* ── HUD Panels ───────────────────────────────────────── */}
+      {/* ── HUD Panels (togglable) ─────────────────────────────── */}
+      {showHUD && (
+        <>
+          {/* Top-left: World Status */}
+          <div className="absolute top-16 left-4 z-20 hidden md:block">
+            <WorldStatusPanel
+              time={world.time}
+              agentCount={world.agents.length}
+              activeConversations={world.stats.activeConversations}
+              buildingsInProgress={buildingsInProgress}
+              connected={sse.connected}
+            />
+          </div>
 
-      {/* Top-left: World Status */}
-      <div className="absolute top-16 left-4 z-20 hidden md:block">
-        <WorldStatusPanel
-          time={world.time}
-          agentCount={world.agents.length}
-          activeConversations={world.stats.activeConversations}
-          buildingsInProgress={buildingsInProgress}
-          connected={sse.connected}
-        />
-      </div>
+          {/* Bottom-left: Economy */}
+          <div className="absolute bottom-4 left-4 z-20 hidden md:block">
+            <EconomyPanel
+              totalMoney={world.stats.totalMoney}
+              totalWood={world.stats.totalWood}
+              totalFish={world.stats.totalFish}
+              topEarners={topEarners}
+            />
+          </div>
 
-      {/* Top-right: Agent Stats */}
-      <div className="absolute top-16 right-4 z-20 hidden lg:block">
-        <AgentStatsPanel
-          agents={world.agents}
-          stateCount={world.stats.stateCount}
-        />
-      </div>
-
-      {/* Bottom-left: Economy */}
-      <div className="absolute bottom-4 left-4 z-20 hidden md:block">
-        <EconomyPanel
-          totalMoney={world.stats.totalMoney}
-          totalWood={world.stats.totalWood}
-          totalFish={world.stats.totalFish}
-          topEarners={topEarners}
-        />
-      </div>
-
-      {/* Bottom-right: On-Chain */}
-      <div className="absolute bottom-4 right-4 z-20 hidden lg:block">
-        <OnChainPanel />
-      </div>
-
-      {/* Right edge: Activity Feed */}
-      <div className="absolute top-1/2 -translate-y-1/2 right-4 z-20 hidden xl:block">
-        <ActivityFeed events={sse.events} connected={sse.connected} />
-      </div>
+          {/* Right: Activity Feed */}
+          <div className="absolute top-16 right-4 z-20 hidden lg:block">
+            <ActivityFeed events={sse.events} connected={sse.connected} />
+          </div>
+        </>
+      )}
 
       {/* ── Node Detail Drawer ───────────────────────────────── */}
       {selectedAgent && (
-        <div className="absolute top-1/2 -translate-y-1/2 left-4 z-30 md:left-auto md:right-[260px] xl:right-[300px]">
+        <div className="absolute top-1/2 -translate-y-1/2 left-4 z-30 md:left-auto md:right-4 lg:right-[260px]">
           <NodeDetailDrawer
             agent={selectedAgent}
             relationships={world.relationships}
@@ -146,16 +134,6 @@ export default function PulsePage() {
           />
         </div>
       )}
-
-      {/* ── Legend ────────────────────────────────────────────── */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 hidden sm:flex items-center gap-4 bg-black/30 backdrop-blur-sm rounded-full px-4 py-2">
-        {legendItems.map(item => (
-          <div key={item.label} className="flex items-center gap-1.5">
-            <div className="w-2.5 h-0.5 rounded-full" style={{ backgroundColor: item.color }} />
-            <span className="text-[9px] text-white/40 uppercase tracking-wider">{item.label}</span>
-          </div>
-        ))}
-      </div>
 
       {/* ── Loading state ────────────────────────────────────── */}
       {world.loading && (
