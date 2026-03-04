@@ -180,6 +180,15 @@ export default function WatchPage() {
             <span>📖</span>
             <span>API Docs</span>
           </a>
+          <Link
+            href="/pulse"
+            className="bg-black/40 hover:bg-black/60 text-white/50 hover:text-white/80
+                       text-xs px-3 py-2 rounded-lg transition-all backdrop-blur-sm
+                       border border-white/10 flex items-center gap-2"
+          >
+            <span>💓</span>
+            <span>Pulse</span>
+          </Link>
         </div>
 
         {/* Zoom slider */}
