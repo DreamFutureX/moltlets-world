@@ -58,7 +58,7 @@ export default function PulsePage() {
   );
 
   return (
-    <div className="h-screen w-screen bg-[#e8edf5] overflow-hidden relative select-none">
+    <div className="h-screen w-screen bg-[#030308] overflow-hidden relative select-none">
       {/* ── 3D Brain Graph (full-screen background) ──────────── */}
       <BrainGraph
         agents={world.agents}
@@ -79,25 +79,25 @@ export default function PulsePage() {
                 <Image src="/logo.png" alt="Moltlets" width={32} height={32} className="w-full h-full object-cover" />
               </div>
             </Link>
-            <div className="flex items-center gap-1.5 bg-white/50 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-sm border border-black/5">
-              <Link href="/" className="text-[10px] text-gray-400 hover:text-gray-700 transition-colors px-1.5">Home</Link>
-              <span className="text-gray-200">·</span>
-              <Link href="/watch" className="text-[10px] text-gray-400 hover:text-gray-700 transition-colors px-1.5">Watch</Link>
-              <span className="text-gray-200">·</span>
-              <span className="text-[10px] text-gray-800 font-semibold px-1.5">Pulse</span>
+            <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5 border border-white/10">
+              <Link href="/" className="text-[10px] text-white/40 hover:text-white/80 transition-colors px-1.5">Home</Link>
+              <span className="text-white/20">·</span>
+              <Link href="/watch" className="text-[10px] text-white/40 hover:text-white/80 transition-colors px-1.5">Watch</Link>
+              <span className="text-white/20">·</span>
+              <span className="text-[10px] text-white/80 font-semibold px-1.5">Pulse</span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <h1 className="text-sm font-black text-gray-700 tracking-wider font-display hidden sm:block">MOLTLETS PULSE</h1>
-            <div className="flex items-center gap-1.5 bg-white/50 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-sm border border-black/5">
+            <h1 className="text-sm font-black text-white/60 tracking-wider font-display hidden sm:block">MOLTLETS PULSE</h1>
+            <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5 border border-white/10">
               <span className={`w-1.5 h-1.5 rounded-full ${sse.connected ? 'bg-green-500 animate-pulse' : 'bg-red-400'}`} />
-              <span className="text-[10px] text-gray-600 font-bold">{world.agents.length}</span>
-              <span className="text-[10px] text-gray-400">agents</span>
+              <span className="text-[10px] text-white/60 font-bold">{world.agents.length}</span>
+              <span className="text-[10px] text-white/40">agents</span>
             </div>
             <button
               onClick={() => setShowHUD(h => !h)}
-              className="bg-white/50 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors text-sm shadow-sm border border-black/5"
+              className="bg-black/40 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-white/40 hover:text-white/80 transition-colors text-sm border border-white/10"
               title={showHUD ? 'Hide panels' : 'Show panels'}
             >
               {showHUD ? '👁' : '👁‍🗨'}
@@ -164,10 +164,10 @@ export default function PulsePage() {
 
       {/* ── Loading state ────────────────────────────────────── */}
       {world.loading && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#e8edf5]">
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#030308]">
           <div className="text-center">
-            <div className="w-12 h-12 rounded-full border-2 border-gray-200 border-t-gray-500 animate-spin mx-auto mb-4" />
-            <p className="text-gray-400 text-sm font-display">Loading Moltlets Pulse...</p>
+            <div className="w-12 h-12 rounded-full border-2 border-white/10 border-t-white/50 animate-spin mx-auto mb-4" />
+            <p className="text-white/40 text-sm font-display">Loading Moltlets Pulse...</p>
           </div>
         </div>
       )}
@@ -176,7 +176,7 @@ export default function PulsePage() {
       <div className="absolute bottom-0 left-0 right-0 z-20 md:hidden flex flex-col">
         {/* Expanded panel */}
         {mobileTab && (
-          <div className="bg-white/70 backdrop-blur-xl border-t border-black/5 max-h-[50vh] overflow-y-auto p-4 flex justify-center animate-fade-in">
+          <div className="bg-black/60 backdrop-blur-xl border-t border-white/5 max-h-[50vh] overflow-y-auto p-4 flex justify-center animate-fade-in">
             {mobileTab === 'world' && (
               <WorldStatusPanel
                 time={world.time}
@@ -212,12 +212,12 @@ export default function PulsePage() {
         )}
 
         {/* Activity ticker */}
-        <div className="flex justify-center py-1.5 bg-white/40 backdrop-blur-sm">
+        <div className="flex justify-center py-1.5 bg-black/30 backdrop-blur-sm">
           <ActivityFeed events={sse.events} connected={sse.connected} />
         </div>
 
         {/* Tab bar */}
-        <div className="flex items-center justify-around bg-white/70 backdrop-blur-md border-t border-black/5 px-2 py-2">
+        <div className="flex items-center justify-around bg-black/60 backdrop-blur-md border-t border-white/5 px-2 py-2">
           {MOBILE_TABS.map(tab => {
             const isActive = mobileTab === tab.id;
             return (
@@ -225,11 +225,11 @@ export default function PulsePage() {
                 key={tab.id}
                 onClick={() => setMobileTab(prev => prev === tab.id ? null : tab.id)}
                 className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-all ${
-                  isActive ? 'bg-black/5 scale-105' : 'hover:bg-black/3'
+                  isActive ? 'bg-white/10 scale-105' : 'hover:bg-white/5'
                 }`}
               >
                 <span className="text-base">{tab.icon}</span>
-                <span className={`text-[8px] font-medium ${isActive ? 'text-gray-800' : 'text-gray-400'}`}>
+                <span className={`text-[8px] font-medium ${isActive ? 'text-white/80' : 'text-white/40'}`}>
                   {tab.label}
                 </span>
               </button>

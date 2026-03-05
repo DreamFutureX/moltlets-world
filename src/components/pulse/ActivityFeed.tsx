@@ -99,8 +99,8 @@ export default function ActivityFeed({ events, connected }: Props) {
         {displayEvent && (
           <span
             key={displayEvent.key}
-            className="text-xs text-gray-500 whitespace-nowrap"
-            style={{ textShadow: '0 1px 4px rgba(255,255,255,0.6)' }}
+            className="text-xs text-white/50 whitespace-nowrap"
+            style={{ textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}
           >
             {displayEvent.icon} {displayEvent.text}
           </span>
