@@ -77,7 +77,7 @@ function CircleGauge({ value, max, color, size = 36 }: { value: number; max: num
 
   return (
     <svg width={size} height={size} className="shrink-0 -rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth={3} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={3} />
       <circle
         cx={size / 2} cy={size / 2} r={r} fill="none"
         stroke={color} strokeWidth={3} strokeLinecap="round"
@@ -165,8 +165,8 @@ export default function FunStatsPanel({ agents, relationships, stateCount }: Pro
   const { displayed: typedFact, done: typingDone } = useTypingText(currentFact, 35);
 
   return (
-    <div className="bg-white/60 backdrop-blur-md rounded-xl border border-black/8 p-3 w-[210px] shadow-sm">
-      <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2.5 font-display">Vibe Check</h3>
+    <div className="bg-black/50 backdrop-blur-md rounded-xl border border-white/10 p-3 w-[210px]">
+      <h3 className="text-[10px] font-bold text-white/60 uppercase tracking-widest mb-2.5 font-display">Vibe Check</h3>
 
       <div className="space-y-3 text-xs">
         {/* World Mood */}
@@ -176,11 +176,11 @@ export default function FunStatsPanel({ agents, relationships, stateCount }: Pro
               {MOOD_EMOJIS[moodLevel]}
             </span>
             <div className="flex-1">
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-white/40">
                 <span>World Mood</span>
-                <span className="text-gray-800 font-semibold">{MOOD_LABELS[moodLevel]}</span>
+                <span className="text-white/90 font-semibold">{MOOD_LABELS[moodLevel]}</span>
               </div>
-              <div className="mt-1 h-1.5 bg-black/5 rounded-full overflow-hidden">
+              <div className="mt-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{
@@ -195,9 +195,9 @@ export default function FunStatsPanel({ agents, relationships, stateCount }: Pro
 
         {/* Drama Level */}
         <div>
-          <div className="flex justify-between text-gray-600 mb-1">
+          <div className="flex justify-between text-white/40 mb-1">
             <span>Drama Level</span>
-            <span className="text-pink-600 font-semibold text-[10px]">{DRAMA_TITLES[dramaLevel]}</span>
+            <span className="text-pink-400 font-semibold text-[10px]">{DRAMA_TITLES[dramaLevel]}</span>
           </div>
           <div className="flex gap-0.5">
             {[0, 1, 2, 3, 4].map(i => (
@@ -205,7 +205,7 @@ export default function FunStatsPanel({ agents, relationships, stateCount }: Pro
                 key={i}
                 className={`h-2 flex-1 rounded-full transition-all duration-500 ${i <= dramaLevel && dramaLevel >= 3 ? 'animate-pulse' : ''}`}
                 style={{
-                  backgroundColor: i <= dramaLevel ? '#e91e8a' : 'rgba(0,0,0,0.06)',
+                  backgroundColor: i <= dramaLevel ? '#e91e8a' : 'rgba(255,255,255,0.06)',
                   opacity: i <= dramaLevel ? 0.6 + (i / 5) * 0.4 : 1,
                   animationDuration: `${1 + i * 0.2}s`,
                 }}
@@ -218,13 +218,13 @@ export default function FunStatsPanel({ agents, relationships, stateCount }: Pro
         <div className="flex items-center gap-2.5">
           <div className="relative">
             <CircleGauge value={gossipPct} max={100} color="#9333ea" size={36} />
-            <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-purple-700 font-mono rotate-90">
+            <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-purple-400 font-mono rotate-90">
               {gossipPct}%
             </span>
           </div>
           <div className="flex-1">
-            <span className="text-gray-600">Gossip Index</span>
-            <p className="text-[9px] text-gray-400 mt-0.5">
+            <span className="text-white/40">Gossip Index</span>
+            <p className="text-[9px] text-white/30 mt-0.5">
               {gossipPct > 30 ? 'Tea is being spilled!' : gossipPct > 10 ? 'Some chatter...' : 'Pretty quiet'}
             </p>
           </div>
@@ -232,25 +232,25 @@ export default function FunStatsPanel({ agents, relationships, stateCount }: Pro
 
         {/* Wealth Gap */}
         {wealthComparison && (
-          <div className="border-t border-black/5 pt-2">
-            <span className="text-[9px] text-gray-400 uppercase tracking-wider">Wealth Gap ({wealthComparison.gap}%)</span>
+          <div className="border-t border-white/5 pt-2">
+            <span className="text-[9px] text-white/30 uppercase tracking-wider">Wealth Gap ({wealthComparison.gap}%)</span>
             <div className="mt-1.5 space-y-1">
               <div className="flex items-center gap-1.5 text-[10px]">
-                <span className="text-amber-500">👑</span>
-                <span className="text-gray-600 truncate flex-1">{wealthComparison.richest.name}</span>
-                <span className="text-amber-600 font-mono">${Math.round(wealthComparison.richest.money)}</span>
+                <span className="text-amber-400">👑</span>
+                <span className="text-white/60 truncate flex-1">{wealthComparison.richest.name}</span>
+                <span className="text-amber-400 font-mono">${Math.round(wealthComparison.richest.money)}</span>
               </div>
-              <div className="h-1 bg-black/5 rounded-full overflow-hidden flex">
+              <div className="h-1 bg-white/5 rounded-full overflow-hidden flex">
                 <div className="h-full bg-amber-400/60 rounded-full" style={{ width: '100%' }} />
               </div>
               <div className="flex items-center gap-1.5 text-[10px]">
-                <span className="text-gray-400">🪙</span>
-                <span className="text-gray-400 truncate flex-1">{wealthComparison.poorest.name}</span>
-                <span className="text-gray-400 font-mono">${Math.round(wealthComparison.poorest.money)}</span>
+                <span className="text-white/30">🪙</span>
+                <span className="text-white/30 truncate flex-1">{wealthComparison.poorest.name}</span>
+                <span className="text-white/30 font-mono">${Math.round(wealthComparison.poorest.money)}</span>
               </div>
-              <div className="h-1 bg-black/5 rounded-full overflow-hidden flex">
+              <div className="h-1 bg-white/5 rounded-full overflow-hidden flex">
                 <div
-                  className="h-full bg-gray-300 rounded-full"
+                  className="h-full bg-white/20 rounded-full"
                   style={{ width: `${wealthComparison.richest.money > 0 ? (wealthComparison.poorest.money / wealthComparison.richest.money) * 100 : 0}%` }}
                 />
               </div>
@@ -260,17 +260,17 @@ export default function FunStatsPanel({ agents, relationships, stateCount }: Pro
 
         {/* Fun fact */}
         <div
-          className="border-t border-black/5 pt-2 cursor-pointer hover:bg-black/3 -mx-3 px-3 pb-1 rounded-b-lg transition-colors"
+          className="border-t border-white/5 pt-2 cursor-pointer hover:bg-white/5 -mx-3 px-3 pb-1 rounded-b-lg transition-colors"
           onClick={nextFact}
           title="Click for next fact"
         >
           <div className="flex items-center gap-1">
-            <span className="text-[9px] text-gray-400 uppercase tracking-wider">Did you know?</span>
-            <span className="text-[8px] text-gray-300">tap for more</span>
+            <span className="text-[9px] text-white/30 uppercase tracking-wider">Did you know?</span>
+            <span className="text-[8px] text-white/20">tap for more</span>
           </div>
-          <p className="text-[10px] text-gray-500 mt-1 leading-snug min-h-[2em]">
+          <p className="text-[10px] text-white/50 mt-1 leading-snug min-h-[2em]">
             {typedFact}
-            {!typingDone && <span className="animate-pulse text-gray-400">|</span>}
+            {!typingDone && <span className="animate-pulse text-white/30">|</span>}
           </p>
         </div>
       </div>

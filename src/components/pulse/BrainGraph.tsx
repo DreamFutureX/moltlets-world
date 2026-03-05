@@ -134,12 +134,12 @@ export default function BrainGraph({
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ReinhardToneMapping;
-    renderer.toneMappingExposure = 0.8;
+    renderer.toneMappingExposure = 1.0;
     container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xe8edf5);
-    scene.fog = new THREE.FogExp2(0xe8edf5, 0.0006);
+    scene.background = new THREE.Color(0x030308);
+    scene.fog = new THREE.FogExp2(0x030308, 0.0006);
 
     // Camera — further back for wider view
     const camera = new THREE.PerspectiveCamera(60, w / h, 1, 3000);
@@ -156,7 +156,7 @@ export default function BrainGraph({
     // Bloom — reduced to prevent blow-out
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.4, 0.5, 0.35);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.6, 0.5, 0.35);
     composer.addPass(bloomPass);
 
     // Background particles — wider shell
@@ -171,8 +171,8 @@ export default function BrainGraph({
       pPos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       pPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
       pPos[i * 3 + 2] = r * Math.cos(phi);
-      const b = 0.4 + Math.random() * 0.3;
-      pCol[i * 3] = b * 0.7; pCol[i * 3 + 1] = b * 0.75; pCol[i * 3 + 2] = b * 0.9;
+      const b = 0.15 + Math.random() * 0.15;
+      pCol[i * 3] = b * 0.5; pCol[i * 3 + 1] = b * 0.7; pCol[i * 3 + 2] = b;
     }
     pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
     pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
