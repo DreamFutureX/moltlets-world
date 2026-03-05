@@ -4,7 +4,7 @@
 // Moltlets Pulse — Interactive Data Visualization Dashboard
 // ============================================================
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useWorldData } from '@/components/pulse/useWorldData';
@@ -24,42 +24,6 @@ export default function PulsePage() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [showHUD, setShowHUD] = useState(true);
-
-  // ── Auto-showcase: randomly spotlight agents when idle ─────
-  const [isAutoShowcase, setIsAutoShowcase] = useState(true);
-  const lastUserClickRef = useRef(0); // timestamp of last manual click
-
-  // Wrap setSelectedNodeId to detect manual clicks
-  const handleNodeSelect = useCallback((id: string | null) => {
-    lastUserClickRef.current = Date.now();
-    setIsAutoShowcase(false);
-    setSelectedNodeId(id);
-  }, []);
-
-  // Check for idle → re-enable auto-showcase after 10s
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!isAutoShowcase && Date.now() - lastUserClickRef.current > 10000) {
-        setIsAutoShowcase(true);
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isAutoShowcase]);
-
-  // Auto-showcase: cycle random agents every 6s
-  useEffect(() => {
-    if (!isAutoShowcase || world.agents.length === 0) return;
-
-    // Pick a random agent immediately
-    const pickRandom = () => {
-      const agent = world.agents[Math.floor(Math.random() * world.agents.length)];
-      if (agent) setSelectedNodeId(agent.id);
-    };
-
-    pickRandom();
-    const timer = setInterval(pickRandom, 6000);
-    return () => clearInterval(timer);
-  }, [isAutoShowcase, world.agents]);
 
   const selectedAgent = useMemo(
     () => world.agents.find(a => a.id === selectedNodeId) || null,
@@ -91,7 +55,7 @@ export default function PulsePage() {
         events={sse.events}
         selectedNodeId={selectedNodeId}
         hoveredNodeId={hoveredNodeId}
-        onNodeSelect={handleNodeSelect}
+        onNodeSelect={setSelectedNodeId}
         onNodeHover={setHoveredNodeId}
       />
 
@@ -182,7 +146,7 @@ export default function PulsePage() {
           <NodeDetailDrawer
             agent={selectedAgent}
             relationships={world.relationships}
-            onClose={() => handleNodeSelect(null)}
+            onClose={() => setSelectedNodeId(null)}
           />
         </div>
       )}
