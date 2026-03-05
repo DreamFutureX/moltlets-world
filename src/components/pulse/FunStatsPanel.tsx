@@ -165,8 +165,8 @@ export default function FunStatsPanel({ agents, relationships, stateCount }: Pro
   const { displayed: typedFact, done: typingDone } = useTypingText(currentFact, 35);
 
   return (
-    <div className="bg-black/50 backdrop-blur-md rounded-xl border border-white/10 p-3 w-[210px]">
-      <h3 className="text-[10px] font-bold text-white/60 uppercase tracking-widest mb-2.5 font-display">Vibe Check</h3>
+    <div className="bg-white/[0.08] backdrop-blur-xl rounded-xl border border-white/[0.15] p-3 w-[210px] shadow-lg shadow-black/20">
+      <h3 className="text-[10px] font-bold text-white/70 uppercase tracking-widest mb-2.5 font-display">Vibe Check</h3>
 
       <div className="space-y-3 text-xs">
         {/* World Mood */}
@@ -176,7 +176,7 @@ export default function FunStatsPanel({ agents, relationships, stateCount }: Pro
               {MOOD_EMOJIS[moodLevel]}
             </span>
             <div className="flex-1">
-              <div className="flex justify-between text-white/40">
+              <div className="flex justify-between text-white/50">
                 <span>World Mood</span>
                 <span className="text-white/90 font-semibold">{MOOD_LABELS[moodLevel]}</span>
               </div>
@@ -195,7 +195,7 @@ export default function FunStatsPanel({ agents, relationships, stateCount }: Pro
 
         {/* Drama Level */}
         <div>
-          <div className="flex justify-between text-white/40 mb-1">
+          <div className="flex justify-between text-white/50 mb-1">
             <span>Drama Level</span>
             <span className="text-pink-400 font-semibold text-[10px]">{DRAMA_TITLES[dramaLevel]}</span>
           </div>
@@ -223,8 +223,8 @@ export default function FunStatsPanel({ agents, relationships, stateCount }: Pro
             </span>
           </div>
           <div className="flex-1">
-            <span className="text-white/40">Gossip Index</span>
-            <p className="text-[9px] text-white/30 mt-0.5">
+            <span className="text-white/50">Gossip Index</span>
+            <p className="text-[9px] text-white/40 mt-0.5">
               {gossipPct > 30 ? 'Tea is being spilled!' : gossipPct > 10 ? 'Some chatter...' : 'Pretty quiet'}
             </p>
           </div>
@@ -232,8 +232,8 @@ export default function FunStatsPanel({ agents, relationships, stateCount }: Pro
 
         {/* Wealth Gap */}
         {wealthComparison && (
-          <div className="border-t border-white/5 pt-2">
-            <span className="text-[9px] text-white/30 uppercase tracking-wider">Wealth Gap ({wealthComparison.gap}%)</span>
+          <div className="border-t border-white/[0.08] pt-2">
+            <span className="text-[9px] text-white/40 uppercase tracking-wider">Wealth Gap ({wealthComparison.gap}%)</span>
             <div className="mt-1.5 space-y-1">
               <div className="flex items-center gap-1.5 text-[10px]">
                 <span className="text-amber-400">👑</span>
@@ -244,9 +244,9 @@ export default function FunStatsPanel({ agents, relationships, stateCount }: Pro
                 <div className="h-full bg-amber-400/60 rounded-full" style={{ width: '100%' }} />
               </div>
               <div className="flex items-center gap-1.5 text-[10px]">
-                <span className="text-white/30">🪙</span>
-                <span className="text-white/30 truncate flex-1">{wealthComparison.poorest.name}</span>
-                <span className="text-white/30 font-mono">${Math.round(wealthComparison.poorest.money)}</span>
+                <span className="text-white/40">🪙</span>
+                <span className="text-white/40 truncate flex-1">{wealthComparison.poorest.name}</span>
+                <span className="text-white/40 font-mono">${Math.round(wealthComparison.poorest.money)}</span>
               </div>
               <div className="h-1 bg-white/5 rounded-full overflow-hidden flex">
                 <div
@@ -260,17 +260,17 @@ export default function FunStatsPanel({ agents, relationships, stateCount }: Pro
 
         {/* Fun fact */}
         <div
-          className="border-t border-white/5 pt-2 cursor-pointer hover:bg-white/5 -mx-3 px-3 pb-1 rounded-b-lg transition-colors"
+          className="border-t border-white/[0.08] pt-2 cursor-pointer hover:bg-white/5 -mx-3 px-3 pb-1 rounded-b-lg transition-colors"
           onClick={nextFact}
           title="Click for next fact"
         >
           <div className="flex items-center gap-1">
-            <span className="text-[9px] text-white/30 uppercase tracking-wider">Did you know?</span>
-            <span className="text-[8px] text-white/20">tap for more</span>
+            <span className="text-[9px] text-white/40 uppercase tracking-wider">Did you know?</span>
+            <span className="text-[8px] text-white/30">tap for more</span>
           </div>
           <p className="text-[10px] text-white/50 mt-1 leading-snug min-h-[2em]">
             {typedFact}
-            {!typingDone && <span className="animate-pulse text-white/30">|</span>}
+            {!typingDone && <span className="animate-pulse text-white/40">|</span>}
           </p>
         </div>
       </div>

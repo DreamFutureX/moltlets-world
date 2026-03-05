@@ -8,12 +8,12 @@ export default function OnChainPanel() {
   const short = TREASURY_ADDRESS.slice(0, 6) + '...' + TREASURY_ADDRESS.slice(-4);
 
   return (
-    <div className="bg-black/50 backdrop-blur-md rounded-xl border border-white/10 p-4 w-[200px]">
-      <h3 className="text-[10px] font-bold text-white/60 uppercase tracking-widest mb-3 font-display">On-Chain</h3>
+    <div className="bg-white/[0.08] backdrop-blur-xl rounded-xl border border-white/[0.15] p-4 w-[200px] shadow-lg shadow-black/20">
+      <h3 className="text-[10px] font-bold text-white/70 uppercase tracking-widest mb-3 font-display">On-Chain</h3>
 
       <div className="space-y-2.5 text-xs">
         <div>
-          <span className="text-[9px] text-white/40 uppercase tracking-wider">Network</span>
+          <span className="text-[9px] text-white/50 uppercase tracking-wider">Network</span>
           <div className="mt-1">
             <span className={`px-2 py-0.5 text-[9px] rounded-full font-semibold ${isMainnet() ? 'bg-green-500/20 text-green-400' : 'bg-purple-500/20 text-purple-400'}`}>
               {getNetworkLabel()}
@@ -22,7 +22,7 @@ export default function OnChainPanel() {
         </div>
 
         <div>
-          <span className="text-[9px] text-white/40 uppercase tracking-wider">Treasury</span>
+          <span className="text-[9px] text-white/50 uppercase tracking-wider">Treasury</span>
           <p className="text-[10px] text-white/50 font-mono mt-1">{short}</p>
         </div>
 
@@ -38,7 +38,7 @@ export default function OnChainPanel() {
           View on Solana Explorer
         </a>
 
-        <p className="text-[9px] text-white/30 leading-relaxed">
+        <p className="text-[9px] text-white/40 leading-relaxed">
           Activities logged as Solana memo transactions — permanent, verifiable records.
         </p>
       </div>
