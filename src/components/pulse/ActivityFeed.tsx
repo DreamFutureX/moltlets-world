@@ -38,7 +38,7 @@ export default function ActivityFeed({ events, connected }: Props) {
   const keyRef = useRef(0);
   const cycleIndexRef = useRef(0);
 
-  // Queue new events as they arrive
+  // Queue new events
   useEffect(() => {
     if (events.length === 0) return;
     const latest = events[events.length - 1];
@@ -46,14 +46,12 @@ export default function ActivityFeed({ events, connected }: Props) {
     if (!config) return;
     const payload = latest.payload as Record<string, unknown>;
     queueRef.current.push({ icon: config.icon, text: config.format(payload) });
-    // Keep queue bounded
     if (queueRef.current.length > 20) queueRef.current.shift();
   }, [events.length]);
 
-  // Cycle through events: fade in → hold → fade out → next
+  // Cycle: fade in → hold → fade out → next
   useEffect(() => {
     const showNext = () => {
-      // Try to show from queue first, otherwise cycle recent events
       const recentEvents = events.slice(-10);
       let item: { icon: string; text: string } | undefined;
 
@@ -79,10 +77,8 @@ export default function ActivityFeed({ events, connected }: Props) {
       setDisplayEvent({ ...item, key: keyRef.current });
       setVisible(true);
 
-      // Hold visible for 3.5s, then fade out
       timerRef.current = setTimeout(() => {
         setVisible(false);
-        // After fade-out animation (0.5s), show next
         timerRef.current = setTimeout(showNext, 600);
       }, 3500);
     };
@@ -91,14 +87,11 @@ export default function ActivityFeed({ events, connected }: Props) {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, []); // Stable — reads from refs
+  }, []);
 
   return (
     <div className="flex items-center justify-center gap-2 pointer-events-none">
-      {/* Connection dot */}
-      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${connected ? 'bg-green-400/60' : 'bg-red-400/60'}`} />
-
-      {/* Event text with fade animation */}
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${connected ? 'bg-green-500/60' : 'bg-red-400/60'}`} />
       <div
         className="transition-opacity duration-500 ease-in-out"
         style={{ opacity: visible && displayEvent ? 1 : 0 }}
@@ -106,8 +99,8 @@ export default function ActivityFeed({ events, connected }: Props) {
         {displayEvent && (
           <span
             key={displayEvent.key}
-            className="text-xs text-white/50 whitespace-nowrap"
-            style={{ textShadow: '0 1px 8px rgba(0,0,0,0.8)' }}
+            className="text-xs text-gray-500 whitespace-nowrap"
+            style={{ textShadow: '0 1px 4px rgba(255,255,255,0.6)' }}
           >
             {displayEvent.icon} {displayEvent.text}
           </span>
