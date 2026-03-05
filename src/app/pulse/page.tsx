@@ -79,25 +79,25 @@ export default function PulsePage() {
                 <Image src="/logo.png" alt="Moltlets" width={32} height={32} className="w-full h-full object-cover" />
               </div>
             </Link>
-            <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5 border border-white/10">
-              <Link href="/" className="text-[10px] text-white/40 hover:text-white/80 transition-colors px-1.5">Home</Link>
-              <span className="text-white/20">·</span>
-              <Link href="/watch" className="text-[10px] text-white/40 hover:text-white/80 transition-colors px-1.5">Watch</Link>
-              <span className="text-white/20">·</span>
+            <div className="flex items-center gap-1.5 bg-white/[0.08] backdrop-blur-xl rounded-full px-3 py-1.5 border border-white/[0.15] shadow-lg shadow-black/10">
+              <Link href="/" className="text-[10px] text-white/50 hover:text-white/90 transition-colors px-1.5">Home</Link>
+              <span className="text-white/25">·</span>
+              <Link href="/watch" className="text-[10px] text-white/50 hover:text-white/90 transition-colors px-1.5">Watch</Link>
+              <span className="text-white/25">·</span>
               <span className="text-[10px] text-white/80 font-semibold px-1.5">Pulse</span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <h1 className="text-sm font-black text-white/60 tracking-wider font-display hidden sm:block">MOLTLETS PULSE</h1>
-            <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5 border border-white/10">
+            <h1 className="text-sm font-black text-white/70 tracking-wider font-display hidden sm:block">MOLTLETS PULSE</h1>
+            <div className="flex items-center gap-1.5 bg-white/[0.08] backdrop-blur-xl rounded-full px-3 py-1.5 border border-white/[0.15] shadow-lg shadow-black/10">
               <span className={`w-1.5 h-1.5 rounded-full ${sse.connected ? 'bg-green-500 animate-pulse' : 'bg-red-400'}`} />
-              <span className="text-[10px] text-white/60 font-bold">{world.agents.length}</span>
-              <span className="text-[10px] text-white/40">agents</span>
+              <span className="text-[10px] text-white/70 font-bold">{world.agents.length}</span>
+              <span className="text-[10px] text-white/50">agents</span>
             </div>
             <button
               onClick={() => setShowHUD(h => !h)}
-              className="bg-black/40 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-white/40 hover:text-white/80 transition-colors text-sm border border-white/10"
+              className="bg-white/[0.08] backdrop-blur-xl rounded-full w-8 h-8 flex items-center justify-center text-white/50 hover:text-white/90 transition-colors text-sm border border-white/[0.15] shadow-lg shadow-black/10"
               title={showHUD ? 'Hide panels' : 'Show panels'}
             >
               {showHUD ? '👁' : '👁‍🗨'}
@@ -176,7 +176,7 @@ export default function PulsePage() {
       <div className="absolute bottom-0 left-0 right-0 z-20 md:hidden flex flex-col">
         {/* Expanded panel */}
         {mobileTab && (
-          <div className="bg-black/60 backdrop-blur-xl border-t border-white/5 max-h-[50vh] overflow-y-auto p-4 flex justify-center animate-fade-in">
+          <div className="bg-white/[0.06] backdrop-blur-xl border-t border-white/[0.1] max-h-[50vh] overflow-y-auto p-4 flex justify-center animate-fade-in">
             {mobileTab === 'world' && (
               <WorldStatusPanel
                 time={world.time}
@@ -212,12 +212,12 @@ export default function PulsePage() {
         )}
 
         {/* Activity ticker */}
-        <div className="flex justify-center py-1.5 bg-black/30 backdrop-blur-sm">
+        <div className="flex justify-center py-1.5 bg-white/[0.04] backdrop-blur-sm">
           <ActivityFeed events={sse.events} connected={sse.connected} />
         </div>
 
         {/* Tab bar */}
-        <div className="flex items-center justify-around bg-black/60 backdrop-blur-md border-t border-white/5 px-2 py-2">
+        <div className="flex items-center justify-around bg-white/[0.08] backdrop-blur-xl border-t border-white/[0.1] px-2 py-2">
           {MOBILE_TABS.map(tab => {
             const isActive = mobileTab === tab.id;
             return (
@@ -229,7 +229,7 @@ export default function PulsePage() {
                 }`}
               >
                 <span className="text-base">{tab.icon}</span>
-                <span className={`text-[8px] font-medium ${isActive ? 'text-white/80' : 'text-white/40'}`}>
+                <span className={`text-[8px] font-medium ${isActive ? 'text-white/90' : 'text-white/50'}`}>
                   {tab.label}
                 </span>
               </button>
