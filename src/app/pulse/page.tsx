@@ -4,14 +4,17 @@
 // Moltlets Pulse — Interactive Data Visualization Dashboard
 // ============================================================
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useWorldData } from '@/components/pulse/useWorldData';
 import { useSSEStream } from '@/components/pulse/useSSEStream';
-import RelationshipGraph from '@/components/pulse/RelationshipGraph';
+import BrainGraph from '@/components/pulse/BrainGraph';
 import WorldStatusPanel from '@/components/pulse/WorldStatusPanel';
 import EconomyPanel from '@/components/pulse/EconomyPanel';
+import AgentStatsPanel from '@/components/pulse/AgentStatsPanel';
+import OnChainPanel from '@/components/pulse/OnChainPanel';
+import FunStatsPanel from '@/components/pulse/FunStatsPanel';
 import ActivityFeed from '@/components/pulse/ActivityFeed';
 import NodeDetailDrawer from '@/components/pulse/NodeDetailDrawer';
 
@@ -21,6 +24,42 @@ export default function PulsePage() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [showHUD, setShowHUD] = useState(true);
+
+  // ── Auto-showcase: randomly spotlight agents when idle ─────
+  const [isAutoShowcase, setIsAutoShowcase] = useState(true);
+  const lastUserClickRef = useRef(0); // timestamp of last manual click
+
+  // Wrap setSelectedNodeId to detect manual clicks
+  const handleNodeSelect = useCallback((id: string | null) => {
+    lastUserClickRef.current = Date.now();
+    setIsAutoShowcase(false);
+    setSelectedNodeId(id);
+  }, []);
+
+  // Check for idle → re-enable auto-showcase after 10s
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isAutoShowcase && Date.now() - lastUserClickRef.current > 10000) {
+        setIsAutoShowcase(true);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isAutoShowcase]);
+
+  // Auto-showcase: cycle random agents every 6s
+  useEffect(() => {
+    if (!isAutoShowcase || world.agents.length === 0) return;
+
+    // Pick a random agent immediately
+    const pickRandom = () => {
+      const agent = world.agents[Math.floor(Math.random() * world.agents.length)];
+      if (agent) setSelectedNodeId(agent.id);
+    };
+
+    pickRandom();
+    const timer = setInterval(pickRandom, 6000);
+    return () => clearInterval(timer);
+  }, [isAutoShowcase, world.agents]);
 
   const selectedAgent = useMemo(
     () => world.agents.find(a => a.id === selectedNodeId) || null,
@@ -44,15 +83,15 @@ export default function PulsePage() {
   );
 
   return (
-    <div className="h-screen w-screen bg-[#1a1a2e] overflow-hidden relative select-none">
-      {/* ── Relationship Graph (full-screen background) ──────── */}
-      <RelationshipGraph
+    <div className="h-screen w-screen bg-[#030308] overflow-hidden relative select-none">
+      {/* ── 3D Brain Graph (full-screen background) ──────────── */}
+      <BrainGraph
         agents={world.agents}
         relationships={world.relationships}
         events={sse.events}
         selectedNodeId={selectedNodeId}
         hoveredNodeId={hoveredNodeId}
-        onNodeSelect={setSelectedNodeId}
+        onNodeSelect={handleNodeSelect}
         onNodeHover={setHoveredNodeId}
       />
 
@@ -81,7 +120,6 @@ export default function PulsePage() {
               <span className="text-[10px] text-white/60 font-bold">{world.agents.length}</span>
               <span className="text-[10px] text-white/30">agents</span>
             </div>
-            {/* HUD toggle */}
             <button
               onClick={() => setShowHUD(h => !h)}
               className="bg-black/40 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-white/40 hover:text-white/70 transition-colors text-sm"
@@ -93,11 +131,11 @@ export default function PulsePage() {
         </div>
       </div>
 
-      {/* ── HUD Panels (togglable) ─────────────────────────────── */}
+      {/* ── HUD Panels ─────────────────────────────────────────── */}
       {showHUD && (
         <>
-          {/* Top-left: World Status */}
-          <div className="absolute top-16 left-4 z-20 hidden md:block">
+          {/* Left column: World Status + Economy */}
+          <div className="absolute top-16 left-4 z-20 hidden md:flex flex-col gap-3">
             <WorldStatusPanel
               time={world.time}
               agentCount={world.agents.length}
@@ -105,10 +143,6 @@ export default function PulsePage() {
               buildingsInProgress={buildingsInProgress}
               connected={sse.connected}
             />
-          </div>
-
-          {/* Bottom-left: Economy */}
-          <div className="absolute bottom-4 left-4 z-20 hidden md:block">
             <EconomyPanel
               totalMoney={world.stats.totalMoney}
               totalWood={world.stats.totalWood}
@@ -117,27 +151,45 @@ export default function PulsePage() {
             />
           </div>
 
-          {/* Right: Activity Feed */}
-          <div className="absolute top-16 right-4 z-20 hidden lg:block">
-            <ActivityFeed events={sse.events} connected={sse.connected} />
+          {/* Right column: Agent Stats + Vibe Check */}
+          <div className="absolute top-16 right-4 z-20 hidden lg:flex flex-col gap-3 items-end">
+            <AgentStatsPanel
+              agents={world.agents}
+              stateCount={world.stats.stateCount}
+            />
+            <FunStatsPanel
+              agents={world.agents}
+              relationships={world.relationships}
+              stateCount={world.stats.stateCount}
+            />
+          </div>
+
+          {/* Bottom-right: On-Chain */}
+          <div className="absolute bottom-4 right-4 z-20 hidden md:block">
+            <OnChainPanel />
           </div>
         </>
       )}
 
-      {/* ── Node Detail Drawer ───────────────────────────────── */}
+      {/* ── Activity Ticker (bottom center) ──────────────────── */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 hidden md:block">
+        <ActivityFeed events={sse.events} connected={sse.connected} />
+      </div>
+
+      {/* ── Node Detail Drawer (centered) ────────────────────── */}
       {selectedAgent && (
-        <div className="absolute top-1/2 -translate-y-1/2 left-4 z-30 md:left-auto md:right-4 lg:right-[260px]">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
           <NodeDetailDrawer
             agent={selectedAgent}
             relationships={world.relationships}
-            onClose={() => setSelectedNodeId(null)}
+            onClose={() => handleNodeSelect(null)}
           />
         </div>
       )}
 
       {/* ── Loading state ────────────────────────────────────── */}
       {world.loading && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#1a1a2e]">
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#030308]">
           <div className="text-center">
             <div className="w-12 h-12 rounded-full border-2 border-white/10 border-t-white/50 animate-spin mx-auto mb-4" />
             <p className="text-white/40 text-sm font-display">Loading Moltlets Pulse...</p>

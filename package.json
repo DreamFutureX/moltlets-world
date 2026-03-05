@@ -14,12 +14,14 @@
   "dependencies": {
     "@libsql/client": "^0.17.0",
     "@solana/web3.js": "^1.98.4",
+    "@types/three": "^0.183.1",
     "better-sqlite3": "^12.6.2",
     "drizzle-orm": "^0.45.1",
     "next": "16.1.6",
     "pixi.js": "^8.15.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "three": "^0.183.2",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

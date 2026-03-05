@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { GameEvent } from '@/types';
 
 interface Props {
@@ -18,7 +18,7 @@ const EVENT_CONFIG: Record<string, { icon: string; format: (p: Record<string, un
   building_progress: { icon: '🔨', format: (p) => `${p.agentName || 'Agent'} contributed wood` },
   relationship_change: { icon: '💕', format: (p) => `${p.agent1Name || 'Agent'} & ${p.agent2Name || 'Agent'}: ${p.newStatus || 'changed'}` },
   conversation_start: { icon: '🗣️', format: (p) => `${p.agent1Name || 'Agent'} is talking to ${p.agent2Name || 'Agent'}` },
-  conversation_end: { icon: '👋', format: (p) => `Conversation ended` },
+  conversation_end: { icon: '👋', format: () => `Conversation ended` },
   weather_change: { icon: '🌦️', format: (p) => `Weather changed to ${p.weather || 'unknown'}` },
   time_change: { icon: '🕐', format: (p) => `Day ${p.day || '?'}, Month ${p.month || '?'}` },
   agent_join: { icon: '⭐', format: (p) => `${p.agentName || 'New agent'} joined the world!` },
@@ -30,51 +30,87 @@ const EVENT_CONFIG: Record<string, { icon: string; format: (p: Record<string, un
   activity_start: { icon: '⚡', format: (p) => `${p.agentName || 'Agent'} started ${p.activity || 'activity'}` },
 };
 
-function timeAgo(ts: number): string {
-  const s = Math.floor((Date.now() - ts) / 1000);
-  if (s < 5) return 'now';
-  if (s < 60) return `${s}s`;
-  if (s < 3600) return `${Math.floor(s / 60)}m`;
-  return `${Math.floor(s / 3600)}h`;
-}
-
 export default function ActivityFeed({ events, connected }: Props) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [displayEvent, setDisplayEvent] = useState<{ icon: string; text: string; key: number } | null>(null);
+  const [visible, setVisible] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queueRef = useRef<{ icon: string; text: string }[]>([]);
+  const keyRef = useRef(0);
+  const cycleIndexRef = useRef(0);
 
+  // Queue new events as they arrive
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    if (events.length === 0) return;
+    const latest = events[events.length - 1];
+    const config = EVENT_CONFIG[latest.type];
+    if (!config) return;
+    const payload = latest.payload as Record<string, unknown>;
+    queueRef.current.push({ icon: config.icon, text: config.format(payload) });
+    // Keep queue bounded
+    if (queueRef.current.length > 20) queueRef.current.shift();
   }, [events.length]);
 
+  // Cycle through events: fade in → hold → fade out → next
+  useEffect(() => {
+    const showNext = () => {
+      // Try to show from queue first, otherwise cycle recent events
+      const recentEvents = events.slice(-10);
+      let item: { icon: string; text: string } | undefined;
+
+      if (queueRef.current.length > 0) {
+        item = queueRef.current.shift();
+      } else if (recentEvents.length > 0) {
+        const idx = cycleIndexRef.current % recentEvents.length;
+        const evt = recentEvents[idx];
+        const config = EVENT_CONFIG[evt.type];
+        if (config) {
+          const payload = evt.payload as Record<string, unknown>;
+          item = { icon: config.icon, text: config.format(payload) };
+        }
+        cycleIndexRef.current++;
+      }
+
+      if (!item) {
+        timerRef.current = setTimeout(showNext, 2000);
+        return;
+      }
+
+      keyRef.current++;
+      setDisplayEvent({ ...item, key: keyRef.current });
+      setVisible(true);
+
+      // Hold visible for 3.5s, then fade out
+      timerRef.current = setTimeout(() => {
+        setVisible(false);
+        // After fade-out animation (0.5s), show next
+        timerRef.current = setTimeout(showNext, 600);
+      }, 3500);
+    };
+
+    timerRef.current = setTimeout(showNext, 1000);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []); // Stable — reads from refs
+
   return (
-    <div className="bg-black/50 backdrop-blur-md rounded-xl border border-white/10 w-[240px] flex flex-col max-h-[50vh]">
-      <div className="px-3 py-2 border-b border-white/5 flex items-center gap-2 shrink-0">
-        <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest font-display">Activity</span>
-        <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-        <span className="text-[9px] text-white/30 ml-auto">{events.length} events</span>
-      </div>
+    <div className="flex items-center justify-center gap-2 pointer-events-none">
+      {/* Connection dot */}
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${connected ? 'bg-green-400/60' : 'bg-red-400/60'}`} />
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-thin p-2 space-y-0.5">
-        {events.length === 0 ? (
-          <p className="text-[10px] text-white/20 text-center py-4">Waiting for events...</p>
-        ) : (
-          events.slice(-10).map((evt, i) => {
-            const config = EVENT_CONFIG[evt.type];
-            if (!config) return null;
-            const payload = evt.payload as Record<string, unknown>;
-
-            return (
-              <div
-                key={i}
-                className="flex items-start gap-1.5 px-1.5 py-1 rounded-md hover:bg-white/5 transition-colors animate-fade-in"
-              >
-                <span className="text-[10px] shrink-0 mt-0.5">{config.icon}</span>
-                <span className="text-[10px] text-white/60 flex-1 leading-snug">{config.format(payload)}</span>
-                <span className="text-[8px] text-white/20 shrink-0 mt-0.5 font-mono">{timeAgo(evt.timestamp)}</span>
-              </div>
-            );
-          })
+      {/* Event text with fade animation */}
+      <div
+        className="transition-opacity duration-500 ease-in-out"
+        style={{ opacity: visible && displayEvent ? 1 : 0 }}
+      >
+        {displayEvent && (
+          <span
+            key={displayEvent.key}
+            className="text-xs text-white/50 whitespace-nowrap"
+            style={{ textShadow: '0 1px 8px rgba(0,0,0,0.8)' }}
+          >
+            {displayEvent.icon} {displayEvent.text}
+          </span>
         )}
       </div>
     </div>
