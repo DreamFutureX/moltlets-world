@@ -57,6 +57,52 @@ export default function PulsePage() {
     [world.buildings],
   );
 
+  // Render full panel for the active mobile tab
+  const renderMobilePanel = () => {
+    if (!mobileTab) return null;
+
+    switch (mobileTab) {
+      case 'world':
+        return (
+          <WorldStatusPanel
+            time={world.time}
+            agentCount={world.agents.length}
+            activeConversations={world.stats.activeConversations}
+            buildingsInProgress={buildingsInProgress}
+            connected={sse.connected}
+          />
+        );
+      case 'economy':
+        return (
+          <EconomyPanel
+            totalMoney={world.stats.totalMoney}
+            totalWood={world.stats.totalWood}
+            totalFish={world.stats.totalFish}
+            topEarners={topEarners}
+          />
+        );
+      case 'stats':
+        return (
+          <AgentStatsPanel
+            agents={world.agents}
+            stateCount={world.stats.stateCount}
+          />
+        );
+      case 'vibe':
+        return (
+          <FunStatsPanel
+            agents={world.agents}
+            relationships={world.relationships}
+            stateCount={world.stats.stateCount}
+          />
+        );
+      case 'chain':
+        return <OnChainPanel />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="h-screen w-screen bg-[#030308] overflow-hidden relative select-none">
       {/* ── 3D Brain Graph (full-screen background) ──────────── */}
@@ -106,7 +152,7 @@ export default function PulsePage() {
         </div>
       </div>
 
-      {/* ── Desktop HUD Panels ───────────────────────────────── */}
+      {/* ── Desktop HUD Panels (hidden on mobile) ──────────── */}
       {showHUD && (
         <>
           {/* Left column: World Status + Economy */}
@@ -172,64 +218,31 @@ export default function PulsePage() {
         </div>
       )}
 
-      {/* ── Mobile Bottom Section ────────────────────────────── */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 md:hidden flex flex-col">
-        {/* Expanded panel */}
+      {/* ── Mobile: Full Panel + Tab Bar ──────────────────────── */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 md:hidden">
+        {/* Full panel (appears when a tab is active) */}
         {mobileTab && (
-          <div className="bg-white/[0.06] backdrop-blur-xl border-t border-white/[0.1] max-h-[50vh] overflow-y-auto p-4 flex justify-center animate-fade-in">
-            {mobileTab === 'world' && (
-              <WorldStatusPanel
-                time={world.time}
-                agentCount={world.agents.length}
-                activeConversations={world.stats.activeConversations}
-                buildingsInProgress={buildingsInProgress}
-                connected={sse.connected}
-              />
-            )}
-            {mobileTab === 'economy' && (
-              <EconomyPanel
-                totalMoney={world.stats.totalMoney}
-                totalWood={world.stats.totalWood}
-                totalFish={world.stats.totalFish}
-                topEarners={topEarners}
-              />
-            )}
-            {mobileTab === 'stats' && (
-              <AgentStatsPanel
-                agents={world.agents}
-                stateCount={world.stats.stateCount}
-              />
-            )}
-            {mobileTab === 'vibe' && (
-              <FunStatsPanel
-                agents={world.agents}
-                relationships={world.relationships}
-                stateCount={world.stats.stateCount}
-              />
-            )}
-            {mobileTab === 'chain' && <OnChainPanel />}
+          <div className="px-3 pb-2 [&>div]:w-full">
+            {renderMobilePanel()}
           </div>
         )}
 
-        {/* Activity ticker */}
-        <div className="flex justify-center py-1.5 bg-white/[0.04] backdrop-blur-sm">
-          <ActivityFeed events={sse.events} connected={sse.connected} />
-        </div>
-
         {/* Tab bar */}
-        <div className="flex items-center justify-around bg-white/[0.08] backdrop-blur-xl border-t border-white/[0.1] px-2 py-2">
+        <div className="flex items-center justify-around bg-black/70 backdrop-blur-md border-t border-white/[0.1] px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           {MOBILE_TABS.map(tab => {
             const isActive = mobileTab === tab.id;
             return (
               <button
                 key={tab.id}
-                onClick={() => setMobileTab(prev => prev === tab.id ? null : tab.id)}
-                className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-all ${
-                  isActive ? 'bg-white/10 scale-105' : 'hover:bg-white/5'
+                onClick={() => setMobileTab(isActive ? null : tab.id)}
+                className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-all ${
+                  isActive
+                    ? 'bg-white/[0.12] scale-105'
+                    : 'hover:bg-white/[0.05] active:scale-95'
                 }`}
               >
                 <span className="text-base">{tab.icon}</span>
-                <span className={`text-[8px] font-medium ${isActive ? 'text-white/90' : 'text-white/50'}`}>
+                <span className={`text-[8px] font-medium transition-colors ${isActive ? 'text-white/90' : 'text-white/50'}`}>
                   {tab.label}
                 </span>
               </button>

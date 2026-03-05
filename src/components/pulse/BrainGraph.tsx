@@ -37,6 +37,116 @@ function hexToThreeColor(hex: string): THREE.Color {
   return new THREE.Color(hex);
 }
 
+// ── Intro: letter stroke definitions ──────────────────────────
+
+// Each letter as polyline strokes: array of paths, each path is [x,y] in 0..1
+const LETTER_STROKES: Record<string, [number, number][][]> = {
+  M: [[[0, 1], [0, 0], [0.5, 0.45], [1, 0], [1, 1]]],
+  O: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+  L: [[[0, 0], [0, 1], [1, 1]]],
+  T: [[[0, 0], [1, 0]], [[0.5, 0], [0.5, 1]]],
+  E: [[[1, 0], [0, 0], [0, 1], [1, 1]], [[0, 0.5], [0.75, 0.5]]],
+  S: [[[1, 0.05], [0.7, 0], [0.3, 0], [0, 0.05], [0, 0.45], [0.1, 0.5], [0.9, 0.5], [1, 0.55], [1, 0.95], [0.7, 1], [0.3, 1], [0, 0.95]]],
+};
+
+// Measure total path length of all strokes for a word
+function measureStrokes(word: string, letterW: number, letterH: number, gap: number): {
+  totalLen: number;
+  segments: { ax: number; ay: number; bx: number; by: number; len: number; cumLen: number }[];
+} {
+  const segments: { ax: number; ay: number; bx: number; by: number; len: number; cumLen: number }[] = [];
+  let totalLen = 0;
+  for (let ci = 0; ci < word.length; ci++) {
+    const ch = word[ci];
+    const strokes = LETTER_STROKES[ch];
+    if (!strokes) continue;
+    const ox = ci * (letterW + gap) - (word.length * (letterW + gap) - gap) / 2;
+    const oy = -letterH / 2;
+    for (const path of strokes) {
+      for (let i = 0; i < path.length - 1; i++) {
+        const ax = ox + path[i][0] * letterW;
+        const ay = oy + path[i][1] * letterH;
+        const bx = ox + path[i + 1][0] * letterW;
+        const by = oy + path[i + 1][1] * letterH;
+        const len = Math.sqrt((bx - ax) ** 2 + (by - ay) ** 2);
+        totalLen += len;
+        segments.push({ ax, ay, bx, by, len, cumLen: totalLen });
+      }
+    }
+  }
+  return { totalLen, segments };
+}
+
+// Get positions evenly distributed along letter strokes
+// scale: 0..1 factor that sizes the text (1 = full desktop size)
+function getTextPositions(count: number, scale: number): THREE.Vector3[] {
+  const letterW = 55 * scale;
+  const letterH = 80 * scale;
+  const gap = 18 * scale;
+  const { totalLen, segments } = measureStrokes('MOLTLETS', letterW, letterH, gap);
+
+  const positions: THREE.Vector3[] = [];
+  const spacing = totalLen / count;
+
+  for (let i = 0; i < count; i++) {
+    const targetDist = (i + 0.5) * spacing; // center each agent in its segment
+    // Find which segment this falls on
+    let seg = segments[0];
+    for (const s of segments) {
+      if (s.cumLen >= targetDist) { seg = s; break; }
+    }
+    const prevCum = seg.cumLen - seg.len;
+    const t = seg.len > 0 ? (targetDist - prevCum) / seg.len : 0;
+    const clampedT = Math.max(0, Math.min(1, t));
+    positions.push(new THREE.Vector3(
+      seg.ax + (seg.bx - seg.ax) * clampedT,
+      -(seg.ay + (seg.by - seg.ay) * clampedT), // flip Y
+      (Math.random() - 0.5) * 8,
+    ));
+  }
+  return positions;
+}
+
+// Build THREE.LineSegments geometry for the letter strokes
+function buildTextStrokeLines(scale: number): THREE.LineSegments {
+  const letterW = 55 * scale;
+  const letterH = 80 * scale;
+  const gap = 18 * scale;
+  const word = 'MOLTLETS';
+  const verts: number[] = [];
+
+  for (let ci = 0; ci < word.length; ci++) {
+    const ch = word[ci];
+    const strokes = LETTER_STROKES[ch];
+    if (!strokes) continue;
+    const ox = ci * (letterW + gap) - (word.length * (letterW + gap) - gap) / 2;
+    const oy = -letterH / 2;
+    for (const path of strokes) {
+      for (let i = 0; i < path.length - 1; i++) {
+        verts.push(
+          ox + path[i][0] * letterW, -(oy + path[i][1] * letterH), 0,
+          ox + path[i + 1][0] * letterW, -(oy + path[i + 1][1] * letterH), 0,
+        );
+      }
+    }
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+  const mat = new THREE.LineBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.35,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  return new THREE.LineSegments(geo, mat);
+}
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
 // ── Types ────────────────────────────────────────────────────
 
 interface Node3D {
@@ -55,6 +165,8 @@ interface Node3D {
   ring: THREE.Mesh;
   baseOpacity: number;
   breathPhase: number;
+  textPos: THREE.Vector3 | null;
+  graphPos: THREE.Vector3 | null;
 }
 
 interface Edge3D {
@@ -105,6 +217,12 @@ export default function BrainGraph({
     savedCameraPos: THREE.Vector3 | null;
     savedCameraTarget: THREE.Vector3 | null;
     selectTime: number;
+    introPhase: 'text' | 'morphing' | 'done';
+    introStartTime: number;
+    morphStartTime: number;
+    introPlayed: boolean;
+    introTextPositions: THREE.Vector3[];
+    introStrokeLines: THREE.LineSegments | null;
   } | null>(null);
 
   const selectedRef = useRef<string | null>(null);
@@ -141,14 +259,14 @@ export default function BrainGraph({
     scene.background = new THREE.Color(0x030308);
     scene.fog = new THREE.FogExp2(0x030308, 0.0006);
 
-    // Camera — further back for wider view
+    // Camera — start straight-on and close for intro text readability
     const camera = new THREE.PerspectiveCamera(60, w / h, 1, 3000);
-    camera.position.set(0, 150, 650);
+    camera.position.set(0, 0, 500);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
-    controls.autoRotate = true;
+    controls.autoRotate = false;  // Enable after intro completes
     controls.autoRotateSpeed = 0.25;
     controls.maxDistance = 1500;
     controls.minDistance = 80;
@@ -208,6 +326,12 @@ export default function BrainGraph({
       savedCameraPos: null as THREE.Vector3 | null,
       savedCameraTarget: null as THREE.Vector3 | null,
       selectTime: 0,
+      introPhase: 'text' as 'text' | 'morphing' | 'done',
+      introStartTime: 0,
+      morphStartTime: 0,
+      introPlayed: false,
+      introTextPositions: [] as THREE.Vector3[],
+      introStrokeLines: null as THREE.LineSegments | null,
     };
     state.raycaster.params.Points = { threshold: 2 };
     sceneRef.current = state;
@@ -251,8 +375,123 @@ export default function BrainGraph({
       const selected = selectedRef.current;
       const hovered = hoveredRef.current;
 
+      // ── Intro animation phases ──────────────────────────
+      const skipPhysics = state.introPhase !== 'done';
+      if (skipPhysics && nodes.size > 0) {
+        const elapsed = now - state.introStartTime;
+
+        if (state.introPhase === 'text') {
+          const TEXT_HOLD_TIME = 2500;
+          const SCALE_IN_DURATION = 1500;
+
+          // Sort by textPos.x for left-to-right stagger
+          const sortedNodes = [...nodes.values()]
+            .filter(n => n.textPos)
+            .sort((a, b) => a.textPos!.x - b.textPos!.x);
+
+          for (let i = 0; i < sortedNodes.length; i++) {
+            const node = sortedNodes[i];
+            const staggerDelay = (i / sortedNodes.length) * SCALE_IN_DURATION;
+            const nodeElapsed = elapsed - staggerDelay;
+            const scaleProgress = Math.max(0, Math.min(1, nodeElapsed / 400));
+            const easedScale = easeInOutCubic(scaleProgress);
+
+            // Shrink orbs during text phase so letters are legible
+            const textScale = 0.6;
+            let scale = easedScale * textScale;
+            if (scaleProgress >= 1) {
+              scale = textScale * (1 + Math.sin(now * 0.003 + i) * 0.03);
+            }
+
+            node.core.scale.setScalar(scale);
+            node.innerCore.scale.setScalar(scale);
+            node.glow.scale.setScalar(scale * 0.5); // reduce glow bleed
+            node.ring.scale.setScalar(scale);
+
+            node.core.position.copy(node.textPos!);
+            node.innerCore.position.copy(node.textPos!);
+            node.glow.position.copy(node.textPos!);
+            node.ring.position.copy(node.textPos!);
+            node.pos.copy(node.textPos!);
+          }
+
+          // Fade in stroke lines during text phase
+          if (state.introStrokeLines) {
+            state.introStrokeLines.visible = true;
+            const lineOpacity = Math.min(0.4, elapsed / 800 * 0.4);
+            (state.introStrokeLines.material as THREE.LineBasicMaterial).opacity = lineOpacity;
+          }
+
+          if (elapsed > TEXT_HOLD_TIME) {
+            state.introPhase = 'morphing';
+            state.morphStartTime = now;
+          }
+        } else if (state.introPhase === 'morphing') {
+          const MORPH_DURATION = 1800;
+          const morphElapsed = now - state.morphStartTime;
+          const t = Math.min(1, morphElapsed / MORPH_DURATION);
+          const easedT = easeInOutCubic(t);
+
+          // Scale orbs back to full size & move to graph positions
+          const scaleT = 0.6 + easedT * 0.4; // 0.6 → 1.0
+
+          for (const node of nodes.values()) {
+            if (node.textPos && node.graphPos) {
+              node.pos.lerpVectors(node.textPos, node.graphPos, easedT);
+            }
+            node.core.position.copy(node.pos);
+            node.innerCore.position.copy(node.pos);
+            node.glow.position.copy(node.pos);
+            node.ring.position.copy(node.pos);
+
+            node.core.scale.setScalar(scaleT);
+            node.innerCore.scale.setScalar(scaleT);
+            node.glow.scale.setScalar(scaleT);
+            node.ring.scale.setScalar(scaleT);
+          }
+
+          // Fade out stroke lines during morph
+          if (state.introStrokeLines) {
+            const lineOpacity = 0.4 * (1 - easedT);
+            (state.introStrokeLines.material as THREE.LineBasicMaterial).opacity = lineOpacity;
+          }
+
+          // Lerp camera to normal position
+          state.camera.position.x += (0 - state.camera.position.x) * 0.03;
+          state.camera.position.y += (150 - state.camera.position.y) * 0.03;
+          state.camera.position.z += (650 - state.camera.position.z) * 0.03;
+
+          if (t >= 1) {
+            state.introPhase = 'done';
+            state.introPlayed = true;
+            state.settled = false;
+            state.frameCount = 0;
+            state.controls.autoRotate = true;
+
+            // Remove stroke lines
+            if (state.introStrokeLines) {
+              state.scene.remove(state.introStrokeLines);
+              state.introStrokeLines.geometry.dispose();
+              (state.introStrokeLines.material as THREE.Material).dispose();
+              state.introStrokeLines = null;
+            }
+
+            // Show edges
+            if (state.edgeLines) state.edgeLines.visible = true;
+
+            // Ensure nodes start physics from graphPos
+            for (const node of nodes.values()) {
+              if (node.graphPos) {
+                node.pos.copy(node.graphPos);
+                node.vel.set(0, 0, 0);
+              }
+            }
+          }
+        }
+      }
+
       // ── Force simulation ──────────────────────────────
-      if (!state.settled && nodes.size > 0) {
+      if (!skipPhysics && !state.settled && nodes.size > 0) {
         const nodeArr = [...nodes.values()];
         const n = nodeArr.length;
 
@@ -314,7 +553,7 @@ export default function BrainGraph({
       }
 
       // ── Gentle drift after settled ────────────────────
-      if (state.settled && nodes.size > 0) {
+      if (!skipPhysics && state.settled && nodes.size > 0) {
         const t = now * 0.001;
         let idx = 0;
         for (const node of nodes.values()) {
@@ -331,7 +570,7 @@ export default function BrainGraph({
       }
 
       // ── Neural blinks ─────────────────────────────────
-      if (Math.random() < 0.08) {
+      if (state.introPhase === 'done' && Math.random() < 0.08) {
         const nodeArr = [...nodes.values()];
         if (nodeArr.length > 0) {
           const target = nodeArr[Math.floor(Math.random() * nodeArr.length)];
@@ -358,7 +597,7 @@ export default function BrainGraph({
       }
 
       // ── Scanning beams ────────────────────────────────
-      if (Math.random() < 0.015 && state.edges.length > 0) {
+      if (state.introPhase === 'done' && Math.random() < 0.015 && state.edges.length > 0) {
         const strong = state.edges.filter(e => Math.abs(e.score) >= 30);
         const pool = strong.length > 5 ? strong : state.edges;
         const edge = pool[Math.floor(Math.random() * pool.length)];
@@ -435,20 +674,25 @@ export default function BrainGraph({
         (node.innerCore.material as THREE.MeshBasicMaterial).opacity = Math.min(1, op * 1.5 + blinkI * 0.5);
         (node.glow.material as THREE.MeshBasicMaterial).opacity = dimmed ? 0.01 : (0.05 + blinkI * 0.25);
 
-        node.core.scale.setScalar(totalScale);
-        node.innerCore.scale.setScalar(totalScale);
-        node.glow.scale.setScalar(totalScale);
+        // During intro, the intro loop handles scale — don't override
+        if (!skipPhysics) {
+          node.core.scale.setScalar(totalScale);
+          node.innerCore.scale.setScalar(totalScale);
+          node.glow.scale.setScalar(totalScale);
+        }
 
         // Orbital ring rotation
         node.ring.rotation.z += 0.008 + (isHovered ? 0.02 : 0);
         node.ring.rotation.x = Math.sin(breathT * 0.5 + node.breathPhase) * 0.3;
         const rMat = node.ring.material as THREE.MeshBasicMaterial;
         rMat.opacity = dimmed ? 0.02 : (isSelected ? 0.5 : isHovered ? 0.4 : 0.12 + blinkI * 0.3);
-        node.ring.scale.setScalar(isSelected ? 1.4 : isHovered ? 1.3 : 1.0);
+        if (!skipPhysics) {
+          node.ring.scale.setScalar(isSelected ? 1.4 : isHovered ? 1.3 : 1.0);
+        }
       }
 
       // ── Edge lines ────────────────────────────────────
-      if (state.edgeLines) {
+      if (state.introPhase === 'done' && state.edgeLines) {
         const pos = state.edgeLines.geometry.attributes.position as THREE.BufferAttribute;
         let vi = 0;
         for (const edge of state.edges) {
@@ -464,7 +708,7 @@ export default function BrainGraph({
       }
 
       // ── Selected node edges (brighter) ────────────────
-      if (state.selectedEdgeLines) {
+      if (state.introPhase === 'done' && state.selectedEdgeLines) {
         state.selectedEdgeLines.visible = !!selected;
         if (selected) {
           const edges = state.edges.filter(e => e.sourceId === selected || e.targetId === selected);
@@ -563,6 +807,11 @@ export default function BrainGraph({
         beam.mesh.geometry.dispose();
         (beam.mesh.material as THREE.Material).dispose();
       }
+      if (state.introStrokeLines) {
+        state.scene.remove(state.introStrokeLines);
+        state.introStrokeLines.geometry.dispose();
+        (state.introStrokeLines.material as THREE.Material).dispose();
+      }
       renderer.dispose();
       composer.dispose();
       if (container.contains(renderer.domElement)) {
@@ -590,6 +839,7 @@ export default function BrainGraph({
     }
 
     // Add/update nodes
+    let newNodeIdx = 0;
     for (const a of agents) {
       const appearance = typeof a.appearance === 'string' ? JSON.parse(a.appearance) : a.appearance;
       const color = hexToThreeColor(appearance?.color || '#FFD93D');
@@ -632,16 +882,70 @@ export default function BrainGraph({
         const ring = new THREE.Mesh(orbRingGeo, orbRingMat);
         ring.rotation.x = Math.random() * Math.PI;
 
-        // Wider spread
-        const spreadR = 500;
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(2 * Math.random() - 1);
-        const r = spreadR * (0.3 + Math.random() * 0.7);
-        const pos = new THREE.Vector3(
-          r * Math.sin(phi) * Math.cos(theta),
-          r * Math.sin(phi) * Math.sin(theta) * 0.6,
-          r * Math.cos(phi),
-        );
+        // ── Position: intro text or normal spherical ──
+        let pos: THREE.Vector3;
+        let textPos: THREE.Vector3 | null = null;
+        let graphPos: THREE.Vector3 | null = null;
+
+        if (!state.introPlayed) {
+          // First load: compute text positions and build stroke lines
+          if (state.introTextPositions.length === 0) {
+            const vw = state.renderer.domElement.clientWidth || 1200;
+            const vh = state.renderer.domElement.clientHeight || 800;
+            const aspect = vw / vh;
+            // Camera distance — fixed at 500 so orbs are visible
+            const camZ = 500;
+            // Compute actual visible horizontal width at camera distance
+            const halfVFov = (60 / 2) * Math.PI / 180; // 30° in radians
+            const visibleW = 2 * camZ * Math.tan(halfVFov) * aspect;
+            // Scale text to fit within 80% of visible width
+            // Base text width at scale=1 is: 8*(55+18)-18 = 566 units
+            const textScale = Math.min(1, (visibleW * 0.80) / 566);
+            state.introTextPositions = getTextPositions(agents.length, textScale);
+            state.introStartTime = Date.now();
+            state.introPhase = 'text';
+            // Build glowing line geometry that traces each letter
+            state.introStrokeLines = buildTextStrokeLines(textScale);
+            state.introStrokeLines.visible = false; // will fade in
+            state.scene.add(state.introStrokeLines);
+            state.camera.position.set(0, 0, camZ);
+          }
+
+          textPos = state.introTextPositions[newNodeIdx] ||
+            new THREE.Vector3((Math.random() - 0.5) * 600, (Math.random() - 0.5) * 200, (Math.random() - 0.5) * 100);
+
+          // Pre-compute graph target position
+          const spreadR = 500;
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.acos(2 * Math.random() - 1);
+          const r = spreadR * (0.3 + Math.random() * 0.7);
+          graphPos = new THREE.Vector3(
+            r * Math.sin(phi) * Math.cos(theta),
+            r * Math.sin(phi) * Math.sin(theta) * 0.6,
+            r * Math.cos(phi),
+          );
+
+          pos = textPos.clone();
+
+          // Start at scale 0 for scale-in effect
+          core.scale.setScalar(0.01);
+          innerCore.scale.setScalar(0.01);
+          glow.scale.setScalar(0.01);
+          ring.scale.setScalar(0.01);
+        } else {
+          // Normal: random spherical position
+          const spreadR = 500;
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.acos(2 * Math.random() - 1);
+          const r = spreadR * (0.3 + Math.random() * 0.7);
+          pos = new THREE.Vector3(
+            r * Math.sin(phi) * Math.cos(theta),
+            r * Math.sin(phi) * Math.sin(theta) * 0.6,
+            r * Math.cos(phi),
+          );
+        }
+
+        newNodeIdx++;
 
         core.position.copy(pos);
         innerCore.position.copy(pos);
@@ -655,6 +959,8 @@ export default function BrainGraph({
           core, innerCore, glow, ring,
           baseOpacity: 0.8,
           breathPhase: Math.random() * Math.PI * 2,
+          textPos,
+          graphPos,
         });
       }
     }
@@ -695,6 +1001,11 @@ export default function BrainGraph({
     }));
     state.scene.add(state.edgeLines);
 
+    // Hide edges during intro
+    if (state.introPhase !== 'done') {
+      state.edgeLines.visible = false;
+    }
+
     // Selected-edge geometry (max 15)
     if (state.selectedEdgeLines) state.scene.remove(state.selectedEdgeLines);
     const selGeo = new THREE.BufferGeometry();
@@ -707,8 +1018,11 @@ export default function BrainGraph({
     state.selectedEdgeLines.visible = false;
     state.scene.add(state.selectedEdgeLines);
 
-    state.settled = false;
-    state.frameCount = 0;
+    // Only reset physics if intro is already done
+    if (state.introPlayed) {
+      state.settled = false;
+      state.frameCount = 0;
+    }
   }, [agents, relationships]);
 
   // ── SSE event flash ────────────────────────────────────────
