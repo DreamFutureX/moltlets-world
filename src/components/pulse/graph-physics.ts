@@ -58,39 +58,13 @@ export function initializeNodes(
   });
 }
 
-// ── Build edges — top N strongest per agent + all rivals ─────
-
-const MAX_EDGES_PER_AGENT = 3;
+// ── Build ALL edges (no filtering — visual layer decides what to show) ──
 
 export function buildEdges(
   relationships: { agent1Id: string; agent2Id: string; score: number; status: string; interactionCount: number }[],
 ): GraphEdge[] {
-  // Always include rival edges (rare, interesting)
-  const rivals = relationships.filter(r => r.status === 'rival');
-
-  // For each agent, pick their top N strongest positive relationships
-  const agentTopEdges = new Map<string, typeof relationships>();
-  for (const r of relationships) {
-    if (r.status === 'rival') continue;
-    for (const id of [r.agent1Id, r.agent2Id]) {
-      if (!agentTopEdges.has(id)) agentTopEdges.set(id, []);
-      agentTopEdges.get(id)!.push(r);
-    }
-  }
-
-  const selectedKeys = new Set<string>();
-  for (const [, rels] of agentTopEdges) {
-    rels.sort((a, b) => b.score - a.score);
-    for (const r of rels.slice(0, MAX_EDGES_PER_AGENT)) {
-      selectedKeys.add(r.agent1Id + ':' + r.agent2Id);
-    }
-  }
-
-  const selected = relationships.filter(
-    r => r.status === 'rival' || selectedKeys.has(r.agent1Id + ':' + r.agent2Id),
-  );
-
-  return [...new Map(selected.map(r => [r.agent1Id + ':' + r.agent2Id, r])).values()]
+  return relationships
+    .filter(r => Math.abs(r.score) >= 3)
     .map(r => ({
       source: r.agent1Id,
       target: r.agent2Id,
@@ -99,6 +73,25 @@ export function buildEdges(
       interactionCount: r.interactionCount,
       pulseT: Math.random(),
     }));
+}
+
+// ── Get top N edges for a specific node ──────────────────────
+
+export function getEdgesForNode(edges: GraphEdge[], nodeId: string, max: number = 10): GraphEdge[] {
+  return edges
+    .filter(e => e.source === nodeId || e.target === nodeId)
+    .sort((a, b) => Math.abs(b.score) - Math.abs(a.score))
+    .slice(0, max);
+}
+
+// ── Pick a random edge for scanning beam animation ───────────
+
+export function pickRandomEdge(edges: GraphEdge[]): GraphEdge | null {
+  if (edges.length === 0) return null;
+  // Prefer stronger relationships for visual interest
+  const strong = edges.filter(e => Math.abs(e.score) >= 30);
+  const pool = strong.length > 20 ? strong : edges;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 // ── Step the physics simulation ─────────────────────────────
