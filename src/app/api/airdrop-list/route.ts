@@ -12,7 +12,11 @@ export async function GET(request: Request) {
   // Require admin key to access wallet data
   const url = new URL(request.url);
   const key = url.searchParams.get('key');
-  const adminKey = process.env.ADMIN_SECRET || 'moltlets-admin-2026';
+  const adminKey = process.env.ADMIN_SECRET;
+  if (!adminKey) {
+    console.error('[Airdrop] ADMIN_SECRET env var is not set');
+    return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+  }
   if (key !== adminKey) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

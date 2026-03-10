@@ -67,6 +67,7 @@ export default function AgentDetail({ agentId, onClose }: AgentDetailProps) {
     const fetchAgent = async () => {
       try {
         const res = await fetch(`/api/agents/${agentId}`);
+        if (!res.ok) return;
         const data = await res.json();
         setAgent(data);
       } catch { /* ignore */ }

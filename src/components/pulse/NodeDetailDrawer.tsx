@@ -33,7 +33,8 @@ const STATE_EMOJI: Record<string, string> = {
 export default function NodeDetailDrawer({ agent, relationships, onClose }: Props) {
   if (!agent) return null;
 
-  const appearance = typeof agent.appearance === 'string' ? JSON.parse(agent.appearance) : agent.appearance;
+  let appearance;
+  try { appearance = typeof agent.appearance === 'string' ? JSON.parse(agent.appearance) : agent.appearance; } catch { appearance = null; }
   const level = getLevel(agent.exp);
   const fishTotal = agent.inventory?.fish ? Object.values(agent.inventory.fish).reduce((a, b) => a + b, 0) : 0;
 

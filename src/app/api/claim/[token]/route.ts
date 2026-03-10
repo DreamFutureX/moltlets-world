@@ -4,11 +4,11 @@
 // ============================================================
 
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { db } from '@/db';
 import { agentClaims, agents } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { world } from '@/engine/init';
-import { getPrivateKeyBase58 } from '@/lib/solana';
 
 // GET - Fetch claim details
 export async function GET(
@@ -86,8 +86,8 @@ export async function POST(
         return NextResponse.json({ error: 'Twitter handle required' }, { status: 400 });
       }
 
-      // Generate verification code
-      const verificationCode = `${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      // Generate verification code (cryptographically secure)
+      const verificationCode = crypto.randomBytes(4).toString('hex').toUpperCase().replace(/(.{4})(.{4})/, '$1-$2');
 
       db.update(agentClaims)
         .set({
@@ -146,11 +146,7 @@ export async function POST(
         agentData.appearance,
       );
 
-      // Check if agent was created or reconnected
-      const agentId = 'reconnected' in result ? result.agentId : result.agentId;
-      const apiKey = 'reconnected' in result ? result.apiKey : result.apiKey;
-      const walletAddress = 'reconnected' in result ? result.walletAddress : result.walletAddress;
-      const position = 'reconnected' in result ? result.position : result.position;
+      const { agentId, apiKey, walletAddress, position } = result;
 
       // Update claim with real agent ID
       db.update(agentClaims)
@@ -171,7 +167,6 @@ export async function POST(
           agentId,
           apiKey,
           walletAddress,
-          walletPrivateKey: getPrivateKeyBase58(agentId),
           spawnPosition: position,
         },
         instructions: [

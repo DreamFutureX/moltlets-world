@@ -40,6 +40,7 @@ export default function RelationshipPanel({ selectedAgentId }: RelationshipPanel
           ? `/api/relationships?agentId=${selectedAgentId}`
           : '/api/relationships';
         const res = await fetch(url);
+        if (!res.ok) return;
         const data = await res.json();
         setRelationships(data.relationships || []);
       } catch { /* ignore */ }

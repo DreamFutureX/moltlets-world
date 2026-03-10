@@ -23,6 +23,7 @@ export function useSSEStream(): SSEStreamState {
   const [connected, setConnected] = useState(false);
   const [lastEventAt, setLastEventAt] = useState<number | null>(null);
   const eventsRef = useRef<GameEvent[]>([]);
+  const lastEventAtRef = useRef<number | null>(null);
   const retryCount = useRef(0);
   const esRef = useRef<EventSource | null>(null);
 
@@ -31,7 +32,7 @@ export function useSSEStream(): SSEStreamState {
       esRef.current.close();
     }
 
-    const url = lastEventAt ? `/api/stream?since=${lastEventAt}` : '/api/stream';
+    const url = lastEventAtRef.current ? `/api/stream?since=${lastEventAtRef.current}` : '/api/stream';
     const es = new EventSource(url);
     esRef.current = es;
 
@@ -44,14 +45,19 @@ export function useSSEStream(): SSEStreamState {
       try {
         const event: GameEvent = JSON.parse(e.data);
         if (HIDDEN_EVENTS.has(event.type)) {
-          // Still track timestamp for reconnection catch-up
-          if (event.timestamp) setLastEventAt(event.timestamp);
+          if (event.timestamp) {
+            lastEventAtRef.current = event.timestamp;
+            setLastEventAt(event.timestamp);
+          }
           return;
         }
 
         eventsRef.current = [...eventsRef.current.slice(-(MAX_EVENTS - 1)), event];
         setEvents(eventsRef.current);
-        if (event.timestamp) setLastEventAt(event.timestamp);
+        if (event.timestamp) {
+          lastEventAtRef.current = event.timestamp;
+          setLastEventAt(event.timestamp);
+        }
       } catch { /* ignore parse errors */ }
     };
 
@@ -64,7 +70,7 @@ export function useSSEStream(): SSEStreamState {
       retryCount.current++;
       setTimeout(connect, delay);
     };
-  }, [lastEventAt]);
+  }, []);
 
   useEffect(() => {
     connect();
@@ -72,8 +78,7 @@ export function useSSEStream(): SSEStreamState {
       esRef.current?.close();
       esRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [connect]);
 
   return { events, connected, lastEventAt };
 }

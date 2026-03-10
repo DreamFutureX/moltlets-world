@@ -34,6 +34,7 @@ export default function AgentList({ onAgentSelect, selectedAgentId }: AgentListP
     const fetchAgents = async () => {
       try {
         const res = await fetch('/api/agents/summary');
+        if (!res.ok) return;
         const data = await res.json();
         setAgents(data.agents || []);
       } catch { /* ignore */ }

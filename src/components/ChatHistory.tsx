@@ -45,6 +45,7 @@ export default function ChatHistory({ selectedAgentId }: ChatHistoryProps) {
           ? `/api/conversations?agentId=${selectedAgentId}`
           : '/api/conversations';
         const res = await fetch(url);
+        if (!res.ok) return;
         const data = await res.json();
         setConversations(data.conversations || []);
       } catch { /* ignore */ }
@@ -66,6 +67,7 @@ export default function ChatHistory({ selectedAgentId }: ChatHistoryProps) {
       try {
         setLoading(true);
         const res = await fetch(`/api/conversations/${activeConvoId}`);
+        if (!res.ok) return;
         const data = await res.json();
         setMessages(data.messages || []);
       } catch { /* ignore */ }

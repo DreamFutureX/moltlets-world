@@ -46,7 +46,8 @@ export default function PulsePage() {
       .sort((a, b) => b.money - a.money)
       .slice(0, 5)
       .map(a => {
-        const app = typeof a.appearance === 'string' ? JSON.parse(a.appearance) : a.appearance;
+        let app;
+        try { app = typeof a.appearance === 'string' ? JSON.parse(a.appearance) : a.appearance; } catch { app = null; }
         return { name: a.name, color: app?.color || '#FFD93D', money: a.money };
       }),
     [world.agents],
@@ -218,11 +219,26 @@ export default function PulsePage() {
         </div>
       )}
 
+      {/* ── Error state ───────────────────────────────────────── */}
+      {!world.loading && world.error && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#030308]/90">
+          <div className="text-center">
+            <p className="text-red-400/80 text-sm mb-3">Failed to load world data</p>
+            <button
+              onClick={world.refresh}
+              className="bg-white/10 hover:bg-white/20 text-white/70 text-xs px-4 py-2 rounded-full transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Mobile: Full Panel + Tab Bar ──────────────────────── */}
       <div className="absolute bottom-0 left-0 right-0 z-20 md:hidden">
         {/* Full panel (appears when a tab is active) */}
         {mobileTab && (
-          <div className="px-3 pb-2 [&>div]:w-full">
+          <div className="px-3 pb-2 [&>div]:!w-full">
             {renderMobilePanel()}
           </div>
         )}

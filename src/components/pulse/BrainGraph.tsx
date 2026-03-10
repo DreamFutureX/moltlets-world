@@ -91,6 +91,7 @@ function getTextPositions(count: number, scale: number): THREE.Vector3[] {
   for (let i = 0; i < count; i++) {
     const targetDist = (i + 0.5) * spacing; // center each agent in its segment
     // Find which segment this falls on
+    if (segments.length === 0) return [];
     let seg = segments[0];
     for (const s of segments) {
       if (s.cumLen >= targetDist) { seg = s; break; }
@@ -505,7 +506,7 @@ export default function BrainGraph({
             const distSq = dx * dx + dy * dy + dz * dz;
             const dist = Math.sqrt(distSq) || 1;
             if (dist > 800) continue;
-            const force = 3500 / distSq;
+            const force = 3500 / Math.max(1, distSq);
             const fx = (dx / dist) * force;
             const fy = (dy / dist) * force;
             const fz = (dz / dist) * force;
@@ -812,6 +813,27 @@ export default function BrainGraph({
         state.introStrokeLines.geometry.dispose();
         (state.introStrokeLines.material as THREE.Material).dispose();
       }
+      // Dispose particles
+      if (state.particles) {
+        state.particles.geometry.dispose();
+        (state.particles.material as THREE.Material).dispose();
+      }
+      // Dispose edge lines
+      if (state.edgeLines) {
+        state.edgeLines.geometry.dispose();
+        (state.edgeLines.material as THREE.Material).dispose();
+      }
+      if (state.selectedEdgeLines) {
+        state.selectedEdgeLines.geometry.dispose();
+        (state.selectedEdgeLines.material as THREE.Material).dispose();
+      }
+      // Dispose node meshes
+      for (const node of state.nodes.values()) {
+        node.core.geometry.dispose(); (node.core.material as THREE.Material).dispose();
+        node.innerCore.geometry.dispose(); (node.innerCore.material as THREE.Material).dispose();
+        node.glow.geometry.dispose(); (node.glow.material as THREE.Material).dispose();
+        node.ring.geometry.dispose(); (node.ring.material as THREE.Material).dispose();
+      }
       renderer.dispose();
       composer.dispose();
       if (container.contains(renderer.domElement)) {
@@ -830,10 +852,14 @@ export default function BrainGraph({
     const existing = state.nodes;
     const newIds = new Set(agents.map(a => a.id));
 
-    // Remove old
+    // Remove old (dispose geometry/material to prevent GPU leaks)
     for (const [id, node] of existing) {
       if (!newIds.has(id)) {
         state.scene.remove(node.core, node.innerCore, node.glow, node.ring);
+        node.core.geometry.dispose(); (node.core.material as THREE.Material).dispose();
+        node.innerCore.geometry.dispose(); (node.innerCore.material as THREE.Material).dispose();
+        node.glow.geometry.dispose(); (node.glow.material as THREE.Material).dispose();
+        node.ring.geometry.dispose(); (node.ring.material as THREE.Material).dispose();
         existing.delete(id);
       }
     }
@@ -841,7 +867,8 @@ export default function BrainGraph({
     // Add/update nodes
     let newNodeIdx = 0;
     for (const a of agents) {
-      const appearance = typeof a.appearance === 'string' ? JSON.parse(a.appearance) : a.appearance;
+      let appearance;
+      try { appearance = typeof a.appearance === 'string' ? JSON.parse(a.appearance) : a.appearance; } catch { appearance = null; }
       const color = hexToThreeColor(appearance?.color || '#FFD93D');
       const level = getLevel(a.exp);
       const radius = 3 + Math.min(5, level * 0.8);
@@ -975,8 +1002,12 @@ export default function BrainGraph({
         score: r.score, status: r.status, interactionCount: r.interactionCount,
       }));
 
-    // Rebuild edge geometry
-    if (state.edgeLines) state.scene.remove(state.edgeLines);
+    // Rebuild edge geometry (dispose old to prevent GPU memory leak)
+    if (state.edgeLines) {
+      state.edgeLines.geometry.dispose();
+      (state.edgeLines.material as THREE.Material).dispose();
+      state.scene.remove(state.edgeLines);
+    }
     const edgeCount = state.edges.length;
     const edgePos = new Float32Array(edgeCount * 6);
     const edgeCol = new Float32Array(edgeCount * 6);
@@ -1006,8 +1037,12 @@ export default function BrainGraph({
       state.edgeLines.visible = false;
     }
 
-    // Selected-edge geometry (max 15)
-    if (state.selectedEdgeLines) state.scene.remove(state.selectedEdgeLines);
+    // Selected-edge geometry (max 15) — dispose old
+    if (state.selectedEdgeLines) {
+      state.selectedEdgeLines.geometry.dispose();
+      (state.selectedEdgeLines.material as THREE.Material).dispose();
+      state.scene.remove(state.selectedEdgeLines);
+    }
     const selGeo = new THREE.BufferGeometry();
     selGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(15 * 6), 3));
     selGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(15 * 6), 3));

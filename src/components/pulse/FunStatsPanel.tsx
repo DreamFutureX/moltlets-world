@@ -39,12 +39,14 @@ const FUN_FACTS = [
     return `Average net worth: $${Math.round(avg)}`;
   },
   (a: AgentData[]) => {
+    if (a.length === 0) return 'No agents yet';
     const richest = a.reduce((m, x) => x.money > m.money ? x : m, a[0]);
-    return richest ? `${richest.name} is flexing with $${Math.round(richest.money)}` : 'No agents yet';
+    return `${richest.name} is flexing with $${Math.round(richest.money)}`;
   },
   (a: AgentData[]) => {
+    if (a.length === 0) return 'No agents yet';
     const poorest = a.reduce((m, x) => x.money < m.money ? x : m, a[0]);
-    return poorest ? `${poorest.name} needs a side hustle ($${Math.round(poorest.money)})` : 'No agents yet';
+    return `${poorest.name} needs a side hustle ($${Math.round(poorest.money)})`;
   },
   (a: AgentData[]) => {
     const builders = a.filter(x => x.state === 'building').length;

@@ -62,6 +62,7 @@ export default function WatchPage() {
     const fetchStats = async () => {
       try {
         const res = await fetch('/api/world/stats');
+        if (!res.ok) return;
         const data = await res.json();
         setAgentCount(data.agentCount || 0);
         if (data.time) setWorldTime(data.time);
