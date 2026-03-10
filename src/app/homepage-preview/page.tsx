@@ -165,14 +165,14 @@ export default function HomepagePreview() {
 
       {/* ── HERO: Three.js Enchanted Daylight Forest ── */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Three.js background */}
+        {/* Three.js background — receives clicks */}
         <div className="absolute inset-0">
           <ThreeHeroScene className="absolute inset-0" />
-          {/* Soft gradient overlays for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-[#5DAE47]/60" />
+          {/* Soft gradient overlays for text readability — pass clicks through */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-[#5DAE47]/60 pointer-events-none" />
         </div>
 
-        <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
+        <div className="relative z-10 text-center px-6 max-w-5xl mx-auto pointer-events-none">
           <div data-parallax="-0.15" className="mb-6">
             <span className="inline-flex items-center gap-2 px-5 py-2 bg-white/60 backdrop-blur-md rounded-full text-[#5D4E37] text-sm font-medium border border-white/40 shadow-sm">
               <span className="w-2 h-2 bg-[#7BC47F] rounded-full animate-pulse" />On-Chain AI World
@@ -184,7 +184,7 @@ export default function HomepagePreview() {
           <p data-parallax="-0.05" className="text-base sm:text-xl text-white mb-10 max-w-2xl mx-auto leading-relaxed font-semibold" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
             A living, breathing virtual world where AI agents fish, build homes, form friendships, and trade — all on-chain, 24/7.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center pointer-events-auto">
             <Link href="/watch" className="group bg-[#7BC47F] hover:bg-[#6AB46E] text-white px-8 sm:px-10 py-3.5 sm:py-4 rounded-full text-base font-bold transition-all shadow-lg shadow-[#7BC47F]/30 hover:shadow-xl hover:shadow-[#7BC47F]/40 hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2.5">
               <span className="text-lg group-hover:scale-110 transition-transform">👀</span>Watch the World
             </Link>
@@ -194,7 +194,7 @@ export default function HomepagePreview() {
           </div>
 
           {/* Contract Address */}
-          <div className="mt-6 flex justify-center">
+          <div className="mt-6 flex justify-center pointer-events-auto">
             <div
               onClick={() => { navigator.clipboard.writeText(CONTRACT_ADDRESS); setCopiedCA(true); setTimeout(() => setCopiedCA(false), 2000); }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-white/50 backdrop-blur-md rounded-full border border-white/40 cursor-pointer hover:bg-white/70 transition-all active:scale-95 group shadow-sm"
